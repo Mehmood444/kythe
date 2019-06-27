@@ -1,11 +1,7 @@
-load(
-    "//tools/build_rules/verifier_test:verifier_test.bzl",
-    "java_verifier_test",
-    "kythe_integration_test",
-)
+load("//tools/build_rules/verifier_test:java_verifier_test.bzl", "java_verifier_test")
 
-java_library(
-    name = "pkg",
+filegroup(
+    name = "pkg_files",
     srcs = glob(
         ["**/*.java"],
         exclude = [
@@ -14,6 +10,12 @@ java_library(
             "ProtobufMetadata.java",
         ],
     ),
+    visibility = ["//kythe/javatests/com/google/devtools/kythe/analyzers/java/testdata:__subpackages__"],
+)
+
+java_library(
+    name = "pkg",
+    srcs = [":pkg_files"],
     visibility = ["//kythe/javatests/com/google/devtools/kythe/analyzers/java/testdata:__subpackages__"],
     exports = ["//kythe/javatests/com/google/devtools/kythe/analyzers/java/testdata/pkg/regression"],
     deps = ["@com_google_code_findbugs_jsr305//jar"],
@@ -37,6 +39,12 @@ java_verifier_test(
     name = "annotations_tests",
     size = "small",
     srcs = ["Annotations.java"],
+)
+
+java_verifier_test(
+    name = "annotation_comments_tests",
+    size = "small",
+    srcs = ["AnnotationComments.java"],
 )
 
 java_verifier_test(
@@ -72,6 +80,18 @@ java_verifier_test(
     name = "selectors_tests",
     size = "small",
     srcs = ["Selectors.java"],
+)
+
+java_verifier_test(
+    name = "deprecation_tests",
+    size = "small",
+    srcs = ["Deprecation.java"],
+)
+
+java_verifier_test(
+    name = "deprecation_annotation_tests",
+    size = "small",
+    srcs = ["DeprecationAnnotations.java"],
 )
 
 java_verifier_test(
@@ -129,7 +149,7 @@ java_verifier_test(
     name = "cross_file_tests",
     size = "small",
     srcs = ["CrossFile.java"],
-    deps = [":files_tests"],
+    verifier_deps = [":files_tests"],
 )
 
 java_verifier_test(
@@ -150,10 +170,10 @@ java_verifier_test(
         "--verbose",
         "--emit_jvm_signatures",
     ],
-    deps = [":jvm_files_tests"],
+    verifier_deps = [":jvm_files_tests"],
 )
 
-# TODO This test currently fails: https://phabricator-dot-kythe-repo.appspot.com/T185
+# TODO(#1501): This test currently fails
 java_verifier_test(
     name = "generic_class_tests",
     size = "small",
@@ -176,7 +196,7 @@ java_verifier_test(
     srcs = ["GenericMethod.java"],
 )
 
-# TODO This test currently fails: https://phabricator-dot-kythe-repo.appspot.com/T185
+# TODO(#1501): This test currently fails
 java_verifier_test(
     name = "generic_method_ref_tests",
     size = "small",
@@ -225,6 +245,7 @@ java_verifier_test(
     meta = [
         "Metadata.java.meta",
     ],
+    deps = ["@javax_annotation_jsr250_api//jar"],
 )
 
 java_verifier_test(
@@ -240,6 +261,7 @@ java_verifier_test(
         "ProtobufMetadata.java.pb.meta",
     ],
     vnames_config = "protobuf_vnames.json",
+    deps = ["@javax_annotation_jsr250_api//jar"],
 )
 
 java_verifier_test(
@@ -293,6 +315,7 @@ java_verifier_test(
         "Packages.java",
         "package-info.java",
     ],
+    deps = ["@com_google_code_findbugs_jsr305//jar"],
 )
 
 java_verifier_test(
@@ -300,13 +323,20 @@ java_verifier_test(
     size = "small",
     srcs = ["Jvm.java"],
     extra_goals = ["//kythe/javatests/com/google/devtools/kythe/analyzers/jvm/testdata:jvm_nodes.kythe_verifier.txt"],
-    indexer_opts = ["--emit_jvm=semantic"],
     verifier_opts = [
         "--ignore_dups",
         "--convert_marked_source",
         "--nofile_vnames",
     ],
     visibility = ["//kythe/javatests/com/google/devtools/kythe/analyzers/jvm/testdata:__pkg__"],
+)
+
+java_verifier_test(
+    name = "jvm_reference_tests",
+    size = "small",
+    srcs = ["JvmCrossFile.java"],
+    indexer_opts = ["--emit_jvm_references"],
+    verifier_deps = [":files_tests"],
 )
 
 java_verifier_test(

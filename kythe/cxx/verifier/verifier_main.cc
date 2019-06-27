@@ -16,17 +16,17 @@
 
 #include <stdio.h>
 #include <unistd.h>
+
 #include <string>
 
+#include "absl/strings/str_format.h"
+#include "assertion_ast.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
-
 #include "kythe/proto/storage.pb.h"
-
-#include "assertion_ast.h"
 #include "verifier.h"
 
 DEFINE_bool(show_protos, false, "Show protocol buffers read from standard in");
@@ -51,7 +51,8 @@ int main(int argc, char** argv) {
   ::gflags::SetVersionString("0.1");
   ::gflags::SetUsageMessage(R"(Verification tool for Kythe databases.
 Reads Kythe facts from standard input and checks them against one or more rule
-files. See the DESIGN file for more details on invocation and rule syntax.
+files. See https://kythe.io/docs/kythe-verifier.html for more details on
+invocation and rule syntax.
 
 Example:
   ${INDEXER_BIN} -i $1 | ${VERIFIER_BIN} --show_protos --show_goals $1
@@ -67,7 +68,7 @@ Example:
   } else {
     std::string error;
     if (!v.SetGoalCommentRegex(FLAGS_goal_regex, &error)) {
-      fprintf(stderr, "While parsing goal regex: %s\n", error.c_str());
+      absl::FPrintF(stderr, "While parsing goal regex: %s\n", error);
       return 1;
     }
   }
@@ -109,14 +110,15 @@ Example:
     }
     auto limit = coded_input.PushLimit(byte_size);
     if (!entry.ParseFromCodedStream(&coded_input)) {
-      fprintf(stderr, "Error reading around fact %zu\n", facts);
+      absl::FPrintF(stderr, "Error reading around fact %zu\n", facts);
       return 1;
     }
     if (FLAGS_show_protos) {
       entry.PrintDebugString();
+      putchar('\n');
     }
     if (!v.AssertSingleFact(&dbname, facts, entry)) {
-      fprintf(stderr, "Error asserting fact %zu\n", facts);
+      absl::FPrintF(stderr, "Error asserting fact %zu\n", facts);
       return 1;
     }
     ++facts;
@@ -129,7 +131,7 @@ Example:
   if (!FLAGS_graphviz) {
     std::vector<std::string> rule_files(argv + 1, argv + argc);
     if (rule_files.empty() && !FLAGS_use_file_nodes) {
-      fprintf(stderr, "No rule files specified\n");
+      absl::FPrintF(stderr, "No rule files specified\n");
       return 1;
     }
 
@@ -138,7 +140,7 @@ Example:
         continue;
       }
       if (!v.LoadInlineRuleFile(rule_file)) {
-        fprintf(stderr, "Failed loading %s.\n", rule_file.c_str());
+        absl::FPrintF(stderr, "Failed loading %s.\n", rule_file);
         return 2;
       }
     }
@@ -155,8 +157,8 @@ Example:
   int result = 0;
 
   if (!v.VerifyAllGoals()) {
-    fprintf(stderr,
-            "Could not verify all goals. The furthest we reached was:\n  ");
+    absl::FPrintF(
+        stderr, "Could not verify all goals. The furthest we reached was:\n  ");
     v.DumpErrorGoal(v.highest_group_reached(), v.highest_goal_reached());
     result = 1;
   }

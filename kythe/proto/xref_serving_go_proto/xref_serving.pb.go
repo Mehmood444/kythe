@@ -3,13 +3,15 @@
 
 package xref_serving_go_proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import common_go_proto "kythe.io/kythe/proto/common_go_proto"
-import schema_go_proto "kythe.io/kythe/proto/schema_go_proto"
-import serving_go_proto "kythe.io/kythe/proto/serving_go_proto"
-import storage_go_proto "kythe.io/kythe/proto/storage_go_proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	common_go_proto "kythe.io/kythe/proto/common_go_proto"
+	schema_go_proto "kythe.io/kythe/proto/schema_go_proto"
+	serving_go_proto "kythe.io/kythe/proto/serving_go_proto"
+	storage_go_proto "kythe.io/kythe/proto/storage_go_proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -20,7 +22,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type FileDecorations_TargetOverride_Kind int32
 
@@ -35,6 +37,7 @@ var FileDecorations_TargetOverride_Kind_name = map[int32]string{
 	1: "OVERRIDES",
 	2: "EXTENDS",
 }
+
 var FileDecorations_TargetOverride_Kind_value = map[string]int32{
 	"UNKNOWN":   0,
 	"OVERRIDES": 1,
@@ -44,8 +47,9 @@ var FileDecorations_TargetOverride_Kind_value = map[string]int32{
 func (x FileDecorations_TargetOverride_Kind) String() string {
 	return proto.EnumName(FileDecorations_TargetOverride_Kind_name, int32(x))
 }
+
 func (FileDecorations_TargetOverride_Kind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 3, 0}
+	return fileDescriptor_4321824b5a70238a, []int{0, 3, 0}
 }
 
 type CrossReferences_Callsite_Kind int32
@@ -61,6 +65,7 @@ var CrossReferences_Callsite_Kind_name = map[int32]string{
 	1: "DIRECT",
 	2: "OVERRIDE",
 }
+
 var CrossReferences_Callsite_Kind_value = map[string]int32{
 	"UNKNOWN":  0,
 	"DIRECT":   1,
@@ -70,8 +75,9 @@ var CrossReferences_Callsite_Kind_value = map[string]int32{
 func (x CrossReferences_Callsite_Kind) String() string {
 	return proto.EnumName(CrossReferences_Callsite_Kind_name, int32(x))
 }
+
 func (CrossReferences_Callsite_Kind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1, 4, 0}
+	return fileDescriptor_4321824b5a70238a, []int{1, 4, 0}
 }
 
 type FileDecorations struct {
@@ -96,16 +102,17 @@ func (m *FileDecorations) Reset()         { *m = FileDecorations{} }
 func (m *FileDecorations) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations) ProtoMessage()    {}
 func (*FileDecorations) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0}
+	return fileDescriptor_4321824b5a70238a, []int{0}
 }
+
 func (m *FileDecorations) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations.Unmarshal(m, b)
 }
 func (m *FileDecorations) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations.Merge(dst, src)
+func (m *FileDecorations) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations.Merge(m, src)
 }
 func (m *FileDecorations) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations.Size(m)
@@ -251,9 +258,9 @@ func (m *FileDecorations) GetDiagnostic() *FileDecorations_Diagnostic {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*FileDecorations) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _FileDecorations_OneofMarshaler, _FileDecorations_OneofUnmarshaler, _FileDecorations_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*FileDecorations) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*FileDecorations_Index_)(nil),
 		(*FileDecorations_Text_)(nil),
 		(*FileDecorations_Target_)(nil),
@@ -264,198 +271,6 @@ func (*FileDecorations) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffe
 		(*FileDecorations_Override_)(nil),
 		(*FileDecorations_Diagnostic_)(nil),
 	}
-}
-
-func _FileDecorations_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*FileDecorations)
-	// entry
-	switch x := m.Entry.(type) {
-	case *FileDecorations_Index_:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Index); err != nil {
-			return err
-		}
-	case *FileDecorations_Text_:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Text); err != nil {
-			return err
-		}
-	case *FileDecorations_Target_:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Target); err != nil {
-			return err
-		}
-	case *FileDecorations_TargetOverride_:
-		b.EncodeVarint(5<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.TargetOverride); err != nil {
-			return err
-		}
-	case *FileDecorations_TargetNode_:
-		b.EncodeVarint(6<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.TargetNode); err != nil {
-			return err
-		}
-	case *FileDecorations_TargetDefinition_:
-		b.EncodeVarint(7<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.TargetDefinition); err != nil {
-			return err
-		}
-	case *FileDecorations_DefinitionLocation_:
-		b.EncodeVarint(8<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.DefinitionLocation); err != nil {
-			return err
-		}
-	case *FileDecorations_Override_:
-		b.EncodeVarint(9<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Override); err != nil {
-			return err
-		}
-	case *FileDecorations_Diagnostic_:
-		b.EncodeVarint(10<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Diagnostic); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("FileDecorations.Entry has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _FileDecorations_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*FileDecorations)
-	switch tag {
-	case 2: // entry.index
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_Index)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_Index_{msg}
-		return true, err
-	case 3: // entry.text
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_Text)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_Text_{msg}
-		return true, err
-	case 4: // entry.target
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_Target)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_Target_{msg}
-		return true, err
-	case 5: // entry.target_override
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_TargetOverride)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_TargetOverride_{msg}
-		return true, err
-	case 6: // entry.target_node
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_TargetNode)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_TargetNode_{msg}
-		return true, err
-	case 7: // entry.target_definition
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_TargetDefinition)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_TargetDefinition_{msg}
-		return true, err
-	case 8: // entry.definition_location
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_DefinitionLocation)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_DefinitionLocation_{msg}
-		return true, err
-	case 9: // entry.override
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_Override)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_Override_{msg}
-		return true, err
-	case 10: // entry.diagnostic
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileDecorations_Diagnostic)
-		err := b.DecodeMessage(msg)
-		m.Entry = &FileDecorations_Diagnostic_{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _FileDecorations_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*FileDecorations)
-	// entry
-	switch x := m.Entry.(type) {
-	case *FileDecorations_Index_:
-		s := proto.Size(x.Index)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileDecorations_Text_:
-		s := proto.Size(x.Text)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileDecorations_Target_:
-		s := proto.Size(x.Target)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileDecorations_TargetOverride_:
-		s := proto.Size(x.TargetOverride)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileDecorations_TargetNode_:
-		s := proto.Size(x.TargetNode)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileDecorations_TargetDefinition_:
-		s := proto.Size(x.TargetDefinition)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileDecorations_DefinitionLocation_:
-		s := proto.Size(x.DefinitionLocation)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileDecorations_Override_:
-		s := proto.Size(x.Override)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileDecorations_Diagnostic_:
-		s := proto.Size(x.Diagnostic)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type FileDecorations_Index struct {
@@ -469,16 +284,17 @@ func (m *FileDecorations_Index) Reset()         { *m = FileDecorations_Index{} }
 func (m *FileDecorations_Index) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_Index) ProtoMessage()    {}
 func (*FileDecorations_Index) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 0}
+	return fileDescriptor_4321824b5a70238a, []int{0, 0}
 }
+
 func (m *FileDecorations_Index) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_Index.Unmarshal(m, b)
 }
 func (m *FileDecorations_Index) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_Index.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_Index) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_Index.Merge(dst, src)
+func (m *FileDecorations_Index) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_Index.Merge(m, src)
 }
 func (m *FileDecorations_Index) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_Index.Size(m)
@@ -509,16 +325,17 @@ func (m *FileDecorations_Text) Reset()         { *m = FileDecorations_Text{} }
 func (m *FileDecorations_Text) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_Text) ProtoMessage()    {}
 func (*FileDecorations_Text) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 1}
+	return fileDescriptor_4321824b5a70238a, []int{0, 1}
 }
+
 func (m *FileDecorations_Text) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_Text.Unmarshal(m, b)
 }
 func (m *FileDecorations_Text) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_Text.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_Text) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_Text.Merge(dst, src)
+func (m *FileDecorations_Text) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_Text.Merge(m, src)
 }
 func (m *FileDecorations_Text) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_Text.Size(m)
@@ -558,6 +375,7 @@ type FileDecorations_Target struct {
 	//	*FileDecorations_Target_GenericKind
 	Kind                 isFileDecorations_Target_Kind `protobuf_oneof:"kind"`
 	Target               *storage_go_proto.VName       `protobuf:"bytes,5,opt,name=target,proto3" json:"target,omitempty"`
+	BuildConfig          string                        `protobuf:"bytes,6,opt,name=build_config,json=buildConfig,proto3" json:"build_config,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
 	XXX_unrecognized     []byte                        `json:"-"`
 	XXX_sizecache        int32                         `json:"-"`
@@ -567,16 +385,17 @@ func (m *FileDecorations_Target) Reset()         { *m = FileDecorations_Target{}
 func (m *FileDecorations_Target) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_Target) ProtoMessage()    {}
 func (*FileDecorations_Target) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 2}
+	return fileDescriptor_4321824b5a70238a, []int{0, 2}
 }
+
 func (m *FileDecorations_Target) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_Target.Unmarshal(m, b)
 }
 func (m *FileDecorations_Target) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_Target.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_Target) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_Target.Merge(dst, src)
+func (m *FileDecorations_Target) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_Target.Merge(m, src)
 }
 func (m *FileDecorations_Target) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_Target.Size(m)
@@ -645,69 +464,19 @@ func (m *FileDecorations_Target) GetTarget() *storage_go_proto.VName {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*FileDecorations_Target) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _FileDecorations_Target_OneofMarshaler, _FileDecorations_Target_OneofUnmarshaler, _FileDecorations_Target_OneofSizer, []interface{}{
+func (m *FileDecorations_Target) GetBuildConfig() string {
+	if m != nil {
+		return m.BuildConfig
+	}
+	return ""
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*FileDecorations_Target) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*FileDecorations_Target_KytheKind)(nil),
 		(*FileDecorations_Target_GenericKind)(nil),
 	}
-}
-
-func _FileDecorations_Target_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*FileDecorations_Target)
-	// kind
-	switch x := m.Kind.(type) {
-	case *FileDecorations_Target_KytheKind:
-		b.EncodeVarint(3<<3 | proto.WireVarint)
-		b.EncodeVarint(uint64(x.KytheKind))
-	case *FileDecorations_Target_GenericKind:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		b.EncodeStringBytes(x.GenericKind)
-	case nil:
-	default:
-		return fmt.Errorf("FileDecorations_Target.Kind has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _FileDecorations_Target_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*FileDecorations_Target)
-	switch tag {
-	case 3: // kind.kythe_kind
-		if wire != proto.WireVarint {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.Kind = &FileDecorations_Target_KytheKind{schema_go_proto.EdgeKind(x)}
-		return true, err
-	case 4: // kind.generic_kind
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.Kind = &FileDecorations_Target_GenericKind{x}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _FileDecorations_Target_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*FileDecorations_Target)
-	// kind
-	switch x := m.Kind.(type) {
-	case *FileDecorations_Target_KytheKind:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(x.KytheKind))
-	case *FileDecorations_Target_GenericKind:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(len(x.GenericKind)))
-		n += len(x.GenericKind)
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type FileDecorations_TargetOverride struct {
@@ -723,16 +492,17 @@ func (m *FileDecorations_TargetOverride) Reset()         { *m = FileDecorations_
 func (m *FileDecorations_TargetOverride) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_TargetOverride) ProtoMessage()    {}
 func (*FileDecorations_TargetOverride) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 3}
+	return fileDescriptor_4321824b5a70238a, []int{0, 3}
 }
+
 func (m *FileDecorations_TargetOverride) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_TargetOverride.Unmarshal(m, b)
 }
 func (m *FileDecorations_TargetOverride) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_TargetOverride.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_TargetOverride) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_TargetOverride.Merge(dst, src)
+func (m *FileDecorations_TargetOverride) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_TargetOverride.Merge(m, src)
 }
 func (m *FileDecorations_TargetOverride) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_TargetOverride.Size(m)
@@ -775,16 +545,17 @@ func (m *FileDecorations_TargetNode) Reset()         { *m = FileDecorations_Targ
 func (m *FileDecorations_TargetNode) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_TargetNode) ProtoMessage()    {}
 func (*FileDecorations_TargetNode) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 4}
+	return fileDescriptor_4321824b5a70238a, []int{0, 4}
 }
+
 func (m *FileDecorations_TargetNode) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_TargetNode.Unmarshal(m, b)
 }
 func (m *FileDecorations_TargetNode) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_TargetNode.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_TargetNode) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_TargetNode.Merge(dst, src)
+func (m *FileDecorations_TargetNode) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_TargetNode.Merge(m, src)
 }
 func (m *FileDecorations_TargetNode) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_TargetNode.Size(m)
@@ -814,16 +585,17 @@ func (m *FileDecorations_TargetDefinition) Reset()         { *m = FileDecoration
 func (m *FileDecorations_TargetDefinition) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_TargetDefinition) ProtoMessage()    {}
 func (*FileDecorations_TargetDefinition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 5}
+	return fileDescriptor_4321824b5a70238a, []int{0, 5}
 }
+
 func (m *FileDecorations_TargetDefinition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_TargetDefinition.Unmarshal(m, b)
 }
 func (m *FileDecorations_TargetDefinition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_TargetDefinition.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_TargetDefinition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_TargetDefinition.Merge(dst, src)
+func (m *FileDecorations_TargetDefinition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_TargetDefinition.Merge(m, src)
 }
 func (m *FileDecorations_TargetDefinition) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_TargetDefinition.Size(m)
@@ -859,16 +631,17 @@ func (m *FileDecorations_DefinitionLocation) Reset()         { *m = FileDecorati
 func (m *FileDecorations_DefinitionLocation) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_DefinitionLocation) ProtoMessage()    {}
 func (*FileDecorations_DefinitionLocation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 6}
+	return fileDescriptor_4321824b5a70238a, []int{0, 6}
 }
+
 func (m *FileDecorations_DefinitionLocation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_DefinitionLocation.Unmarshal(m, b)
 }
 func (m *FileDecorations_DefinitionLocation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_DefinitionLocation.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_DefinitionLocation) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_DefinitionLocation.Merge(dst, src)
+func (m *FileDecorations_DefinitionLocation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_DefinitionLocation.Merge(m, src)
 }
 func (m *FileDecorations_DefinitionLocation) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_DefinitionLocation.Size(m)
@@ -898,16 +671,17 @@ func (m *FileDecorations_Override) Reset()         { *m = FileDecorations_Overri
 func (m *FileDecorations_Override) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_Override) ProtoMessage()    {}
 func (*FileDecorations_Override) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 7}
+	return fileDescriptor_4321824b5a70238a, []int{0, 7}
 }
+
 func (m *FileDecorations_Override) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_Override.Unmarshal(m, b)
 }
 func (m *FileDecorations_Override) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_Override.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_Override) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_Override.Merge(dst, src)
+func (m *FileDecorations_Override) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_Override.Merge(m, src)
 }
 func (m *FileDecorations_Override) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_Override.Size(m)
@@ -943,16 +717,17 @@ func (m *FileDecorations_Diagnostic) Reset()         { *m = FileDecorations_Diag
 func (m *FileDecorations_Diagnostic) String() string { return proto.CompactTextString(m) }
 func (*FileDecorations_Diagnostic) ProtoMessage()    {}
 func (*FileDecorations_Diagnostic) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{0, 8}
+	return fileDescriptor_4321824b5a70238a, []int{0, 8}
 }
+
 func (m *FileDecorations_Diagnostic) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileDecorations_Diagnostic.Unmarshal(m, b)
 }
 func (m *FileDecorations_Diagnostic) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileDecorations_Diagnostic.Marshal(b, m, deterministic)
 }
-func (dst *FileDecorations_Diagnostic) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileDecorations_Diagnostic.Merge(dst, src)
+func (m *FileDecorations_Diagnostic) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileDecorations_Diagnostic.Merge(m, src)
 }
 func (m *FileDecorations_Diagnostic) XXX_Size() int {
 	return xxx_messageInfo_FileDecorations_Diagnostic.Size(m)
@@ -990,16 +765,17 @@ func (m *CrossReferences) Reset()         { *m = CrossReferences{} }
 func (m *CrossReferences) String() string { return proto.CompactTextString(m) }
 func (*CrossReferences) ProtoMessage()    {}
 func (*CrossReferences) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1}
+	return fileDescriptor_4321824b5a70238a, []int{1}
 }
+
 func (m *CrossReferences) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CrossReferences.Unmarshal(m, b)
 }
 func (m *CrossReferences) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CrossReferences.Marshal(b, m, deterministic)
 }
-func (dst *CrossReferences) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CrossReferences.Merge(dst, src)
+func (m *CrossReferences) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrossReferences.Merge(m, src)
 }
 func (m *CrossReferences) XXX_Size() int {
 	return xxx_messageInfo_CrossReferences.Size(m)
@@ -1119,9 +895,9 @@ func (m *CrossReferences) GetNodeDefinition() *CrossReferences_NodeDefinition {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*CrossReferences) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _CrossReferences_OneofMarshaler, _CrossReferences_OneofUnmarshaler, _CrossReferences_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*CrossReferences) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*CrossReferences_Index_)(nil),
 		(*CrossReferences_Reference_)(nil),
 		(*CrossReferences_Relation_)(nil),
@@ -1130,162 +906,6 @@ func (*CrossReferences) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffe
 		(*CrossReferences_RelatedNode_)(nil),
 		(*CrossReferences_NodeDefinition_)(nil),
 	}
-}
-
-func _CrossReferences_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*CrossReferences)
-	// entry
-	switch x := m.Entry.(type) {
-	case *CrossReferences_Index_:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Index); err != nil {
-			return err
-		}
-	case *CrossReferences_Reference_:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Reference); err != nil {
-			return err
-		}
-	case *CrossReferences_Relation_:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Relation); err != nil {
-			return err
-		}
-	case *CrossReferences_Caller_:
-		b.EncodeVarint(5<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Caller); err != nil {
-			return err
-		}
-	case *CrossReferences_Callsite_:
-		b.EncodeVarint(6<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Callsite); err != nil {
-			return err
-		}
-	case *CrossReferences_RelatedNode_:
-		b.EncodeVarint(7<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.RelatedNode); err != nil {
-			return err
-		}
-	case *CrossReferences_NodeDefinition_:
-		b.EncodeVarint(8<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.NodeDefinition); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("CrossReferences.Entry has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _CrossReferences_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*CrossReferences)
-	switch tag {
-	case 2: // entry.index
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(CrossReferences_Index)
-		err := b.DecodeMessage(msg)
-		m.Entry = &CrossReferences_Index_{msg}
-		return true, err
-	case 3: // entry.reference
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(CrossReferences_Reference)
-		err := b.DecodeMessage(msg)
-		m.Entry = &CrossReferences_Reference_{msg}
-		return true, err
-	case 4: // entry.relation
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(CrossReferences_Relation)
-		err := b.DecodeMessage(msg)
-		m.Entry = &CrossReferences_Relation_{msg}
-		return true, err
-	case 5: // entry.caller
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(CrossReferences_Caller)
-		err := b.DecodeMessage(msg)
-		m.Entry = &CrossReferences_Caller_{msg}
-		return true, err
-	case 6: // entry.callsite
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(CrossReferences_Callsite)
-		err := b.DecodeMessage(msg)
-		m.Entry = &CrossReferences_Callsite_{msg}
-		return true, err
-	case 7: // entry.related_node
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(CrossReferences_RelatedNode)
-		err := b.DecodeMessage(msg)
-		m.Entry = &CrossReferences_RelatedNode_{msg}
-		return true, err
-	case 8: // entry.node_definition
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(CrossReferences_NodeDefinition)
-		err := b.DecodeMessage(msg)
-		m.Entry = &CrossReferences_NodeDefinition_{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _CrossReferences_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*CrossReferences)
-	// entry
-	switch x := m.Entry.(type) {
-	case *CrossReferences_Index_:
-		s := proto.Size(x.Index)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *CrossReferences_Reference_:
-		s := proto.Size(x.Reference)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *CrossReferences_Relation_:
-		s := proto.Size(x.Relation)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *CrossReferences_Caller_:
-		s := proto.Size(x.Caller)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *CrossReferences_Callsite_:
-		s := proto.Size(x.Callsite)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *CrossReferences_RelatedNode_:
-		s := proto.Size(x.RelatedNode)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *CrossReferences_NodeDefinition_:
-		s := proto.Size(x.NodeDefinition)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type CrossReferences_Index struct {
@@ -1301,16 +921,17 @@ func (m *CrossReferences_Index) Reset()         { *m = CrossReferences_Index{} }
 func (m *CrossReferences_Index) String() string { return proto.CompactTextString(m) }
 func (*CrossReferences_Index) ProtoMessage()    {}
 func (*CrossReferences_Index) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1, 0}
+	return fileDescriptor_4321824b5a70238a, []int{1, 0}
 }
+
 func (m *CrossReferences_Index) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CrossReferences_Index.Unmarshal(m, b)
 }
 func (m *CrossReferences_Index) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CrossReferences_Index.Marshal(b, m, deterministic)
 }
-func (dst *CrossReferences_Index) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CrossReferences_Index.Merge(dst, src)
+func (m *CrossReferences_Index) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrossReferences_Index.Merge(m, src)
 }
 func (m *CrossReferences_Index) XXX_Size() int {
 	return xxx_messageInfo_CrossReferences_Index.Size(m)
@@ -1357,16 +978,17 @@ func (m *CrossReferences_Reference) Reset()         { *m = CrossReferences_Refer
 func (m *CrossReferences_Reference) String() string { return proto.CompactTextString(m) }
 func (*CrossReferences_Reference) ProtoMessage()    {}
 func (*CrossReferences_Reference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1, 1}
+	return fileDescriptor_4321824b5a70238a, []int{1, 1}
 }
+
 func (m *CrossReferences_Reference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CrossReferences_Reference.Unmarshal(m, b)
 }
 func (m *CrossReferences_Reference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CrossReferences_Reference.Marshal(b, m, deterministic)
 }
-func (dst *CrossReferences_Reference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CrossReferences_Reference.Merge(dst, src)
+func (m *CrossReferences_Reference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrossReferences_Reference.Merge(m, src)
 }
 func (m *CrossReferences_Reference) XXX_Size() int {
 	return xxx_messageInfo_CrossReferences_Reference.Size(m)
@@ -1421,69 +1043,12 @@ func (m *CrossReferences_Reference) GetLocation() *serving_go_proto.ExpandedAnch
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*CrossReferences_Reference) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _CrossReferences_Reference_OneofMarshaler, _CrossReferences_Reference_OneofUnmarshaler, _CrossReferences_Reference_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*CrossReferences_Reference) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*CrossReferences_Reference_KytheKind)(nil),
 		(*CrossReferences_Reference_GenericKind)(nil),
 	}
-}
-
-func _CrossReferences_Reference_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*CrossReferences_Reference)
-	// kind
-	switch x := m.Kind.(type) {
-	case *CrossReferences_Reference_KytheKind:
-		b.EncodeVarint(1<<3 | proto.WireVarint)
-		b.EncodeVarint(uint64(x.KytheKind))
-	case *CrossReferences_Reference_GenericKind:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		b.EncodeStringBytes(x.GenericKind)
-	case nil:
-	default:
-		return fmt.Errorf("CrossReferences_Reference.Kind has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _CrossReferences_Reference_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*CrossReferences_Reference)
-	switch tag {
-	case 1: // kind.kythe_kind
-		if wire != proto.WireVarint {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.Kind = &CrossReferences_Reference_KytheKind{schema_go_proto.EdgeKind(x)}
-		return true, err
-	case 2: // kind.generic_kind
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.Kind = &CrossReferences_Reference_GenericKind{x}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _CrossReferences_Reference_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*CrossReferences_Reference)
-	// kind
-	switch x := m.Kind.(type) {
-	case *CrossReferences_Reference_KytheKind:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(x.KytheKind))
-	case *CrossReferences_Reference_GenericKind:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(len(x.GenericKind)))
-		n += len(x.GenericKind)
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type CrossReferences_Relation struct {
@@ -1503,16 +1068,17 @@ func (m *CrossReferences_Relation) Reset()         { *m = CrossReferences_Relati
 func (m *CrossReferences_Relation) String() string { return proto.CompactTextString(m) }
 func (*CrossReferences_Relation) ProtoMessage()    {}
 func (*CrossReferences_Relation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1, 2}
+	return fileDescriptor_4321824b5a70238a, []int{1, 2}
 }
+
 func (m *CrossReferences_Relation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CrossReferences_Relation.Unmarshal(m, b)
 }
 func (m *CrossReferences_Relation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CrossReferences_Relation.Marshal(b, m, deterministic)
 }
-func (dst *CrossReferences_Relation) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CrossReferences_Relation.Merge(dst, src)
+func (m *CrossReferences_Relation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrossReferences_Relation.Merge(m, src)
 }
 func (m *CrossReferences_Relation) XXX_Size() int {
 	return xxx_messageInfo_CrossReferences_Relation.Size(m)
@@ -1581,69 +1147,12 @@ func (m *CrossReferences_Relation) GetReverse() bool {
 	return false
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*CrossReferences_Relation) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _CrossReferences_Relation_OneofMarshaler, _CrossReferences_Relation_OneofUnmarshaler, _CrossReferences_Relation_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*CrossReferences_Relation) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*CrossReferences_Relation_KytheKind)(nil),
 		(*CrossReferences_Relation_GenericKind)(nil),
 	}
-}
-
-func _CrossReferences_Relation_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*CrossReferences_Relation)
-	// kind
-	switch x := m.Kind.(type) {
-	case *CrossReferences_Relation_KytheKind:
-		b.EncodeVarint(2<<3 | proto.WireVarint)
-		b.EncodeVarint(uint64(x.KytheKind))
-	case *CrossReferences_Relation_GenericKind:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		b.EncodeStringBytes(x.GenericKind)
-	case nil:
-	default:
-		return fmt.Errorf("CrossReferences_Relation.Kind has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _CrossReferences_Relation_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*CrossReferences_Relation)
-	switch tag {
-	case 2: // kind.kythe_kind
-		if wire != proto.WireVarint {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.Kind = &CrossReferences_Relation_KytheKind{schema_go_proto.EdgeKind(x)}
-		return true, err
-	case 3: // kind.generic_kind
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.Kind = &CrossReferences_Relation_GenericKind{x}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _CrossReferences_Relation_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*CrossReferences_Relation)
-	// kind
-	switch x := m.Kind.(type) {
-	case *CrossReferences_Relation_KytheKind:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(x.KytheKind))
-	case *CrossReferences_Relation_GenericKind:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(len(x.GenericKind)))
-		n += len(x.GenericKind)
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type CrossReferences_Caller struct {
@@ -1659,16 +1168,17 @@ func (m *CrossReferences_Caller) Reset()         { *m = CrossReferences_Caller{}
 func (m *CrossReferences_Caller) String() string { return proto.CompactTextString(m) }
 func (*CrossReferences_Caller) ProtoMessage()    {}
 func (*CrossReferences_Caller) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1, 3}
+	return fileDescriptor_4321824b5a70238a, []int{1, 3}
 }
+
 func (m *CrossReferences_Caller) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CrossReferences_Caller.Unmarshal(m, b)
 }
 func (m *CrossReferences_Caller) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CrossReferences_Caller.Marshal(b, m, deterministic)
 }
-func (dst *CrossReferences_Caller) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CrossReferences_Caller.Merge(dst, src)
+func (m *CrossReferences_Caller) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrossReferences_Caller.Merge(m, src)
 }
 func (m *CrossReferences_Caller) XXX_Size() int {
 	return xxx_messageInfo_CrossReferences_Caller.Size(m)
@@ -1713,16 +1223,17 @@ func (m *CrossReferences_Callsite) Reset()         { *m = CrossReferences_Callsi
 func (m *CrossReferences_Callsite) String() string { return proto.CompactTextString(m) }
 func (*CrossReferences_Callsite) ProtoMessage()    {}
 func (*CrossReferences_Callsite) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1, 4}
+	return fileDescriptor_4321824b5a70238a, []int{1, 4}
 }
+
 func (m *CrossReferences_Callsite) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CrossReferences_Callsite.Unmarshal(m, b)
 }
 func (m *CrossReferences_Callsite) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CrossReferences_Callsite.Marshal(b, m, deterministic)
 }
-func (dst *CrossReferences_Callsite) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CrossReferences_Callsite.Merge(dst, src)
+func (m *CrossReferences_Callsite) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrossReferences_Callsite.Merge(m, src)
 }
 func (m *CrossReferences_Callsite) XXX_Size() int {
 	return xxx_messageInfo_CrossReferences_Callsite.Size(m)
@@ -1765,16 +1276,17 @@ func (m *CrossReferences_RelatedNode) Reset()         { *m = CrossReferences_Rel
 func (m *CrossReferences_RelatedNode) String() string { return proto.CompactTextString(m) }
 func (*CrossReferences_RelatedNode) ProtoMessage()    {}
 func (*CrossReferences_RelatedNode) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1, 5}
+	return fileDescriptor_4321824b5a70238a, []int{1, 5}
 }
+
 func (m *CrossReferences_RelatedNode) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CrossReferences_RelatedNode.Unmarshal(m, b)
 }
 func (m *CrossReferences_RelatedNode) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CrossReferences_RelatedNode.Marshal(b, m, deterministic)
 }
-func (dst *CrossReferences_RelatedNode) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CrossReferences_RelatedNode.Merge(dst, src)
+func (m *CrossReferences_RelatedNode) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrossReferences_RelatedNode.Merge(m, src)
 }
 func (m *CrossReferences_RelatedNode) XXX_Size() int {
 	return xxx_messageInfo_CrossReferences_RelatedNode.Size(m)
@@ -1804,16 +1316,17 @@ func (m *CrossReferences_NodeDefinition) Reset()         { *m = CrossReferences_
 func (m *CrossReferences_NodeDefinition) String() string { return proto.CompactTextString(m) }
 func (*CrossReferences_NodeDefinition) ProtoMessage()    {}
 func (*CrossReferences_NodeDefinition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_xref_serving_648ec695fdbb5fd9, []int{1, 6}
+	return fileDescriptor_4321824b5a70238a, []int{1, 6}
 }
+
 func (m *CrossReferences_NodeDefinition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CrossReferences_NodeDefinition.Unmarshal(m, b)
 }
 func (m *CrossReferences_NodeDefinition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CrossReferences_NodeDefinition.Marshal(b, m, deterministic)
 }
-func (dst *CrossReferences_NodeDefinition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CrossReferences_NodeDefinition.Merge(dst, src)
+func (m *CrossReferences_NodeDefinition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrossReferences_NodeDefinition.Merge(m, src)
 }
 func (m *CrossReferences_NodeDefinition) XXX_Size() int {
 	return xxx_messageInfo_CrossReferences_NodeDefinition.Size(m)
@@ -1839,6 +1352,8 @@ func (m *CrossReferences_NodeDefinition) GetLocation() *serving_go_proto.Expande
 }
 
 func init() {
+	proto.RegisterEnum("kythe.proto.serving.xrefs.FileDecorations_TargetOverride_Kind", FileDecorations_TargetOverride_Kind_name, FileDecorations_TargetOverride_Kind_value)
+	proto.RegisterEnum("kythe.proto.serving.xrefs.CrossReferences_Callsite_Kind", CrossReferences_Callsite_Kind_name, CrossReferences_Callsite_Kind_value)
 	proto.RegisterType((*FileDecorations)(nil), "kythe.proto.serving.xrefs.FileDecorations")
 	proto.RegisterType((*FileDecorations_Index)(nil), "kythe.proto.serving.xrefs.FileDecorations.Index")
 	proto.RegisterType((*FileDecorations_Text)(nil), "kythe.proto.serving.xrefs.FileDecorations.Text")
@@ -1857,86 +1372,84 @@ func init() {
 	proto.RegisterType((*CrossReferences_Callsite)(nil), "kythe.proto.serving.xrefs.CrossReferences.Callsite")
 	proto.RegisterType((*CrossReferences_RelatedNode)(nil), "kythe.proto.serving.xrefs.CrossReferences.RelatedNode")
 	proto.RegisterType((*CrossReferences_NodeDefinition)(nil), "kythe.proto.serving.xrefs.CrossReferences.NodeDefinition")
-	proto.RegisterEnum("kythe.proto.serving.xrefs.FileDecorations_TargetOverride_Kind", FileDecorations_TargetOverride_Kind_name, FileDecorations_TargetOverride_Kind_value)
-	proto.RegisterEnum("kythe.proto.serving.xrefs.CrossReferences_Callsite_Kind", CrossReferences_Callsite_Kind_name, CrossReferences_Callsite_Kind_value)
 }
 
-func init() {
-	proto.RegisterFile("kythe/proto/xref_serving.proto", fileDescriptor_xref_serving_648ec695fdbb5fd9)
-}
+func init() { proto.RegisterFile("kythe/proto/xref_serving.proto", fileDescriptor_4321824b5a70238a) }
 
-var fileDescriptor_xref_serving_648ec695fdbb5fd9 = []byte{
-	// 1138 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x5f, 0x6f, 0xe3, 0x44,
-	0x10, 0x8f, 0xf3, 0xaf, 0xc9, 0x24, 0x97, 0x86, 0xe5, 0xc5, 0x67, 0xc1, 0xd1, 0x6b, 0x25, 0x84,
-	0xd0, 0x91, 0xd2, 0x16, 0x10, 0x70, 0xba, 0x43, 0xb4, 0x09, 0x4a, 0xd5, 0x92, 0x8a, 0x6d, 0xef,
-	0x7a, 0x12, 0x48, 0x51, 0xb0, 0x27, 0xae, 0x69, 0xb2, 0x5b, 0xad, 0x97, 0xd2, 0x3e, 0xf2, 0x89,
-	0x78, 0xe1, 0x81, 0x07, 0x3e, 0x02, 0x4f, 0x7c, 0x04, 0x3e, 0x03, 0xaf, 0x48, 0x68, 0xd7, 0x6b,
-	0xc7, 0x4e, 0xd3, 0x16, 0xb7, 0x27, 0x9e, 0xec, 0xdd, 0x99, 0xf9, 0xcd, 0xce, 0xce, 0xce, 0x6f,
-	0x06, 0x1e, 0x9d, 0x5e, 0xca, 0x13, 0x5c, 0x3f, 0x13, 0x5c, 0xf2, 0xf5, 0x0b, 0x81, 0xe3, 0x61,
-	0x88, 0xe2, 0x3c, 0x60, 0x7e, 0x47, 0x6f, 0x91, 0x87, 0x5a, 0x1e, 0x2d, 0x3a, 0xb1, 0x48, 0xe9,
-	0x85, 0x8e, 0x9d, 0x36, 0x75, 0xf9, 0x74, 0xca, 0x59, 0xa4, 0x97, 0x95, 0x84, 0xee, 0x09, 0x4e,
-	0x47, 0x46, 0xf2, 0x30, 0x23, 0x49, 0x7b, 0x9a, 0x13, 0x49, 0x2e, 0x46, 0xbe, 0xf1, 0xbb, 0xfa,
-	0xeb, 0x32, 0x2c, 0x7f, 0x15, 0x4c, 0xb0, 0x8b, 0x2e, 0x17, 0x23, 0x19, 0x70, 0x16, 0x92, 0x77,
-	0xa1, 0x3c, 0x0e, 0x26, 0x68, 0x5b, 0x2b, 0xd6, 0x7b, 0x8d, 0x4d, 0xd2, 0x49, 0x9f, 0xf3, 0xe5,
-	0x60, 0x34, 0x45, 0xaa, 0xe5, 0xa4, 0x0f, 0x95, 0x80, 0x79, 0x78, 0x61, 0x17, 0xb5, 0xe2, 0x87,
-	0x9d, 0x6b, 0x03, 0xea, 0xcc, 0xb9, 0xe8, 0xec, 0x2a, 0xbb, 0x7e, 0x81, 0x46, 0x00, 0xa4, 0x07,
-	0x65, 0x89, 0x17, 0xd2, 0x2e, 0x69, 0xa0, 0xf5, 0x1c, 0x40, 0x47, 0x78, 0x21, 0xfb, 0x05, 0xaa,
-	0xcd, 0xc9, 0x1e, 0x54, 0xe5, 0x48, 0xf8, 0x28, 0xed, 0xb2, 0x06, 0xda, 0xc8, 0x03, 0xa4, 0x0d,
-	0xfb, 0x05, 0x6a, 0x20, 0x88, 0x07, 0xcb, 0xd1, 0xdf, 0x90, 0x9f, 0xa3, 0x10, 0x81, 0x87, 0x76,
-	0x45, 0xa3, 0x7e, 0x96, 0x1b, 0xf5, 0xc0, 0x00, 0xf4, 0x0b, 0xb4, 0x25, 0x33, 0x3b, 0xe4, 0x15,
-	0x34, 0x8c, 0x17, 0xc6, 0x3d, 0xb4, 0xab, 0xda, 0xc3, 0xc7, 0xb9, 0x3d, 0x0c, 0xb8, 0x46, 0x07,
-	0x99, 0xac, 0xc8, 0x0f, 0xf0, 0x86, 0x41, 0xf6, 0x70, 0x1c, 0xb0, 0x40, 0xa9, 0xdb, 0x4b, 0x1a,
-	0xff, 0x69, 0x6e, 0xfc, 0x6e, 0x02, 0xd1, 0x2f, 0xd0, 0xb6, 0x9c, 0xdb, 0x23, 0x67, 0xf0, 0xe6,
-	0xcc, 0xc9, 0x70, 0xc2, 0x5d, 0x6d, 0x6c, 0xd7, 0xb4, 0xb7, 0x67, 0x39, 0xbc, 0xcd, 0x30, 0xf7,
-	0x0d, 0x48, 0xbf, 0x40, 0x89, 0x77, 0x65, 0x97, 0x7c, 0x03, 0xb5, 0x24, 0x2d, 0x75, 0xed, 0x66,
-	0x2b, 0x87, 0x9b, 0x54, 0x42, 0x12, 0x18, 0x72, 0x0c, 0xe0, 0x05, 0x23, 0x9f, 0xf1, 0x50, 0x06,
-	0xae, 0x0d, 0xb9, 0x33, 0xd1, 0x4d, 0x8c, 0x55, 0x26, 0x66, 0x50, 0xce, 0x13, 0xa8, 0xe8, 0xf7,
-	0x4e, 0xd6, 0xe0, 0x81, 0x7a, 0xa7, 0x43, 0x64, 0x2e, 0xf7, 0x02, 0xe6, 0xeb, 0x0a, 0xab, 0xd3,
-	0xa6, 0xda, 0xec, 0x99, 0x3d, 0xe7, 0x3b, 0x28, 0xab, 0x47, 0x4d, 0x1e, 0x43, 0x33, 0x94, 0x23,
-	0x21, 0x87, 0x7c, 0x3c, 0x0e, 0x51, 0x6a, 0xdd, 0x0a, 0x6d, 0xe8, 0xbd, 0x03, 0xbd, 0x45, 0xde,
-	0x06, 0x40, 0xe6, 0xc5, 0x0a, 0x45, 0xad, 0x50, 0x47, 0xe6, 0x19, 0x31, 0x49, 0x55, 0x55, 0x33,
-	0x2a, 0x11, 0xe7, 0x2f, 0x0b, 0xaa, 0x51, 0x4a, 0x5f, 0x83, 0x83, 0x67, 0x00, 0xfa, 0x7a, 0x86,
-	0xa7, 0x01, 0xf3, 0xb4, 0x9b, 0xd6, 0xe6, 0x5b, 0xd9, 0x1b, 0x8b, 0x18, 0xaa, 0xe7, 0xf9, 0xb8,
-	0x17, 0x30, 0xaf, 0x5f, 0xa0, 0x75, 0x2d, 0x56, 0x0b, 0xb2, 0x06, 0x4d, 0x1f, 0x19, 0x8a, 0xc0,
-	0x8d, 0x00, 0x54, 0xd1, 0xd6, 0xfb, 0x05, 0xda, 0x30, 0xbb, 0x5a, 0xe9, 0xfd, 0xa4, 0xa6, 0x2b,
-	0xd7, 0xd2, 0x91, 0xd1, 0xd8, 0xae, 0x42, 0x59, 0x01, 0x39, 0xff, 0x58, 0xd0, 0xca, 0x56, 0x1e,
-	0xd9, 0x04, 0x30, 0x89, 0xf6, 0x90, 0xdd, 0xc0, 0x6c, 0x29, 0x2d, 0x42, 0x23, 0x38, 0x1d, 0x77,
-	0x6b, 0xf3, 0xf9, 0x9d, 0xcb, 0xbe, 0xa3, 0x02, 0xa1, 0x1a, 0x2b, 0x75, 0x0e, 0x95, 0xff, 0xd2,
-	0xad, 0xe7, 0x08, 0x98, 0xbf, 0xba, 0x0e, 0x65, 0x7d, 0x15, 0x0d, 0x58, 0x7a, 0x31, 0xd8, 0x1b,
-	0x1c, 0x1c, 0x0f, 0xda, 0x05, 0xf2, 0x00, 0xea, 0x07, 0x2f, 0x7b, 0x94, 0xee, 0x76, 0x7b, 0x87,
-	0x6d, 0x4b, 0xc9, 0x7a, 0xaf, 0x8e, 0x7a, 0x83, 0xee, 0x61, 0xbb, 0xe8, 0x7c, 0x0e, 0x30, 0xa3,
-	0x05, 0xf2, 0x04, 0xca, 0x9a, 0x5b, 0xa2, 0xa0, 0xed, 0x45, 0xf9, 0x51, 0x7a, 0x54, 0x6b, 0x39,
-	0x02, 0xda, 0xf3, 0x25, 0x9f, 0xca, 0x81, 0x75, 0x5b, 0x0e, 0x54, 0x80, 0x29, 0xbe, 0x29, 0x5e,
-	0x1f, 0xe0, 0x4c, 0xcb, 0x79, 0x01, 0xe4, 0x6a, 0xe1, 0x93, 0x2f, 0xa0, 0x96, 0x30, 0x49, 0xe4,
-	0x77, 0x6d, 0x61, 0x0a, 0x7a, 0x17, 0x67, 0x23, 0xe6, 0xa1, 0xf7, 0x25, 0x73, 0x4f, 0xb8, 0xa0,
-	0x89, 0x91, 0xf3, 0xb3, 0x05, 0xb5, 0xe4, 0x01, 0x74, 0x52, 0x84, 0x71, 0x7d, 0x14, 0x33, 0x36,
-	0xe8, 0xc1, 0x83, 0xe9, 0x48, 0x9c, 0xa2, 0x37, 0x0c, 0xf9, 0x8f, 0xc2, 0x45, 0x13, 0xca, 0x4a,
-	0xc6, 0xc8, 0xb4, 0xe6, 0xaf, 0xb5, 0xe2, 0xa1, 0xd6, 0xa3, 0xcd, 0x69, 0x6a, 0xe5, 0xec, 0x03,
-	0xcc, 0x78, 0x81, 0x3c, 0xcf, 0x50, 0x4c, 0x74, 0x8c, 0x47, 0x8b, 0x10, 0x67, 0x36, 0x69, 0x26,
-	0xd9, 0x5e, 0x82, 0x0a, 0x32, 0x29, 0x2e, 0x57, 0xff, 0x68, 0xc1, 0xf2, 0x8e, 0xe0, 0x61, 0x48,
-	0x71, 0x8c, 0x02, 0x99, 0x8b, 0xa1, 0xca, 0x92, 0x39, 0xea, 0x0d, 0x59, 0x8a, 0x34, 0xf2, 0xb4,
-	0xee, 0x39, 0x37, 0xf3, 0xad, 0xfb, 0x08, 0xea, 0x22, 0x16, 0x9a, 0xf7, 0xfc, 0x51, 0x0e, 0xb4,
-	0xe4, 0x57, 0x51, 0x43, 0x02, 0xa4, 0xe8, 0x5d, 0xe0, 0x24, 0xca, 0x7d, 0xf9, 0x56, 0x7a, 0xbf,
-	0x0a, 0x3a, 0x89, 0x7b, 0x47, 0x02, 0xa3, 0x86, 0x03, 0x77, 0x34, 0x99, 0xa0, 0x30, 0x44, 0xb2,
-	0x91, 0x03, 0x70, 0x47, 0x1b, 0xaa, 0xe1, 0x20, 0x82, 0x50, 0xe7, 0x53, 0x7f, 0x61, 0x20, 0xe3,
-	0x9e, 0xbd, 0x95, 0x13, 0x4e, 0x99, 0xaa, 0xf3, 0xc5, 0x30, 0xe4, 0x5b, 0x68, 0xea, 0xb3, 0xa2,
-	0x17, 0x8d, 0x02, 0x51, 0xab, 0xfe, 0x24, 0x6f, 0xd8, 0xe8, 0x99, 0x59, 0xa0, 0x21, 0x66, 0x4b,
-	0x35, 0xcc, 0x28, 0xd0, 0xf4, 0x28, 0x50, 0xbb, 0x75, 0x98, 0x99, 0xc7, 0x57, 0x48, 0x99, 0x41,
-	0xa0, 0xc5, 0x32, 0x3b, 0xce, 0x2f, 0x56, 0xdc, 0xe9, 0x72, 0x71, 0xce, 0x6b, 0xaa, 0x35, 0xb2,
-	0x01, 0x30, 0x45, 0xe1, 0xe3, 0xf0, 0xa7, 0x40, 0x9e, 0xd8, 0xa5, 0x95, 0xd2, 0x35, 0x45, 0x50,
-	0xd7, 0x5a, 0xc7, 0x81, 0x3c, 0x71, 0x7e, 0xb3, 0xa0, 0x9e, 0x44, 0x38, 0xd7, 0xcf, 0xac, 0xfb,
-	0xf6, 0xb3, 0xe2, 0xa2, 0x7e, 0x96, 0x66, 0xb5, 0xd2, 0x1d, 0x58, 0x2d, 0x69, 0x72, 0x7f, 0x5a,
-	0x50, 0x8b, 0x1f, 0xba, 0x1a, 0xd9, 0x53, 0xf7, 0xbd, 0x70, 0x64, 0xd7, 0x37, 0x9d, 0x8d, 0xb0,
-	0x78, 0xdf, 0x08, 0x4b, 0x8b, 0x22, 0xb4, 0x61, 0x89, 0x0b, 0x2f, 0x60, 0xa3, 0x89, 0x2e, 0xdd,
-	0x0a, 0x8d, 0x97, 0x4a, 0x22, 0xf0, 0x1c, 0x45, 0x18, 0x8d, 0xd2, 0x35, 0x1a, 0x2f, 0x93, 0xa0,
-	0x7e, 0xb7, 0xa0, 0x1a, 0x15, 0x9b, 0xa2, 0x33, 0x53, 0xaf, 0x37, 0xd0, 0x99, 0x29, 0xc7, 0xf4,
-	0xa5, 0x16, 0xef, 0x70, 0xa9, 0x57, 0x5f, 0x60, 0xe9, 0x4e, 0x6c, 0xff, 0xb7, 0x05, 0xb5, 0xb8,
-	0xb8, 0xff, 0xdf, 0x00, 0xf6, 0xcd, 0xac, 0x12, 0x0d, 0x61, 0x9f, 0xde, 0x81, 0x8c, 0x52, 0x53,
-	0xca, 0xea, 0x07, 0x8b, 0x26, 0x0e, 0x80, 0x6a, 0x77, 0x97, 0xf6, 0x76, 0x8e, 0xda, 0x16, 0x69,
-	0x42, 0x2d, 0x9e, 0x3e, 0xda, 0x45, 0xe7, 0x29, 0x34, 0x52, 0xdc, 0x93, 0x73, 0xe0, 0xb8, 0x84,
-	0x56, 0x96, 0x58, 0xfe, 0xf3, 0x63, 0xbe, 0xef, 0xa5, 0x25, 0xed, 0x74, 0xfb, 0x31, 0xbc, 0xe3,
-	0xf2, 0x69, 0xc7, 0xe7, 0xdc, 0x9f, 0x60, 0xc7, 0xc3, 0x73, 0xc9, 0xf9, 0x24, 0x4c, 0x83, 0x7d,
-	0x5f, 0xd5, 0x9f, 0xad, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0xaa, 0xd1, 0x5a, 0x27, 0xd6, 0x0f,
-	0x00, 0x00,
+var fileDescriptor_4321824b5a70238a = []byte{
+	// 1172 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0x5f, 0x6f, 0x1b, 0x45,
+	0x10, 0xf7, 0xf9, 0x5f, 0xec, 0xb1, 0xe3, 0x98, 0x45, 0x48, 0xd7, 0x13, 0x94, 0x34, 0x91, 0x10,
+	0x42, 0xc5, 0x21, 0x09, 0xa0, 0x42, 0xd5, 0x22, 0x12, 0x1b, 0x39, 0x4a, 0x70, 0xc4, 0x26, 0x6d,
+	0x2a, 0x40, 0x3a, 0x5d, 0x6f, 0xd7, 0x97, 0x23, 0xe7, 0xdd, 0x68, 0x6f, 0x1b, 0x92, 0x47, 0x1e,
+	0xf8, 0x3c, 0xbc, 0xf2, 0xc0, 0x47, 0xe0, 0x89, 0x17, 0xbe, 0x08, 0xaf, 0x48, 0x68, 0xf7, 0xfe,
+	0xf8, 0xce, 0x71, 0x12, 0x2e, 0xa9, 0xfa, 0xe4, 0xdb, 0x99, 0xd9, 0xdf, 0xec, 0xec, 0xec, 0xfc,
+	0x66, 0x0c, 0xf7, 0x4f, 0x2e, 0xe4, 0x31, 0x5d, 0x3b, 0x15, 0x5c, 0xf2, 0xb5, 0x73, 0x41, 0xc7,
+	0x76, 0x48, 0xc5, 0x99, 0xcf, 0xbc, 0x9e, 0x16, 0xa1, 0x7b, 0x5a, 0x1f, 0x2d, 0x7a, 0x89, 0x4a,
+	0xd9, 0x85, 0x96, 0x99, 0xdd, 0xea, 0xf2, 0xc9, 0x84, 0xb3, 0xc8, 0x2e, 0xaf, 0x09, 0xdd, 0x63,
+	0x3a, 0x71, 0x62, 0xcd, 0xbd, 0x9c, 0x26, 0xeb, 0x69, 0x46, 0x25, 0xb9, 0x70, 0xbc, 0xd8, 0xef,
+	0xca, 0xdf, 0x4b, 0xb0, 0xf4, 0x8d, 0x1f, 0xd0, 0x3e, 0x75, 0xb9, 0x70, 0xa4, 0xcf, 0x59, 0x88,
+	0x3e, 0x80, 0xea, 0xd8, 0x0f, 0xa8, 0x69, 0x2c, 0x1b, 0x1f, 0xb6, 0x36, 0x50, 0x2f, 0x7b, 0xce,
+	0xe7, 0x23, 0x67, 0x42, 0xb1, 0xd6, 0xa3, 0x21, 0xd4, 0x7c, 0x46, 0xe8, 0xb9, 0x59, 0xd6, 0x86,
+	0x9f, 0xf4, 0xae, 0x0c, 0xa8, 0x37, 0xe3, 0xa2, 0xb7, 0xa3, 0xf6, 0x0d, 0x4b, 0x38, 0x02, 0x40,
+	0x03, 0xa8, 0x4a, 0x7a, 0x2e, 0xcd, 0x8a, 0x06, 0x5a, 0x2b, 0x00, 0x74, 0x48, 0xcf, 0xe5, 0xb0,
+	0x84, 0xf5, 0x76, 0xb4, 0x0b, 0x75, 0xe9, 0x08, 0x8f, 0x4a, 0xb3, 0xaa, 0x81, 0xd6, 0x8b, 0x00,
+	0xe9, 0x8d, 0xc3, 0x12, 0x8e, 0x21, 0x10, 0x81, 0xa5, 0xe8, 0xcb, 0xe6, 0x67, 0x54, 0x08, 0x9f,
+	0x50, 0xb3, 0xa6, 0x51, 0xbf, 0x28, 0x8c, 0xba, 0x1f, 0x03, 0x0c, 0x4b, 0xb8, 0x23, 0x73, 0x12,
+	0xf4, 0x02, 0x5a, 0xb1, 0x17, 0xc6, 0x09, 0x35, 0xeb, 0xda, 0xc3, 0x67, 0x85, 0x3d, 0x8c, 0xb8,
+	0x46, 0x07, 0x99, 0xae, 0xd0, 0x4f, 0xf0, 0x56, 0x8c, 0x4c, 0xe8, 0xd8, 0x67, 0xbe, 0x32, 0x37,
+	0x17, 0x34, 0xfe, 0xe3, 0xc2, 0xf8, 0xfd, 0x14, 0x62, 0x58, 0xc2, 0x5d, 0x39, 0x23, 0x43, 0xa7,
+	0xf0, 0xf6, 0xd4, 0x89, 0x1d, 0x70, 0x57, 0x6f, 0x36, 0x1b, 0xda, 0xdb, 0x93, 0x02, 0xde, 0xa6,
+	0x98, 0x7b, 0x31, 0xc8, 0xb0, 0x84, 0x11, 0xb9, 0x24, 0x45, 0xdf, 0x41, 0x23, 0x4d, 0x4b, 0x53,
+	0xbb, 0xd9, 0x2c, 0xe0, 0x26, 0x93, 0x90, 0x14, 0x06, 0x1d, 0x01, 0x10, 0xdf, 0xf1, 0x18, 0x0f,
+	0xa5, 0xef, 0x9a, 0x50, 0x38, 0x13, 0xfd, 0x74, 0xb3, 0xca, 0xc4, 0x14, 0xca, 0x7a, 0x08, 0x35,
+	0xfd, 0xde, 0xd1, 0x2a, 0x2c, 0xaa, 0x77, 0x6a, 0x53, 0xe6, 0x72, 0xe2, 0x33, 0x4f, 0x57, 0x58,
+	0x13, 0xb7, 0x95, 0x70, 0x10, 0xcb, 0xac, 0x1f, 0xa1, 0xaa, 0x1e, 0x35, 0x7a, 0x00, 0xed, 0x50,
+	0x3a, 0x42, 0xda, 0x7c, 0x3c, 0x0e, 0xa9, 0xd4, 0xb6, 0x35, 0xdc, 0xd2, 0xb2, 0x7d, 0x2d, 0x42,
+	0xef, 0x01, 0x50, 0x46, 0x12, 0x83, 0xb2, 0x36, 0x68, 0x52, 0x46, 0x62, 0x35, 0xca, 0x54, 0x55,
+	0x3b, 0x2a, 0x11, 0xeb, 0xd7, 0x32, 0xd4, 0xa3, 0x94, 0xbe, 0x06, 0x07, 0x4f, 0x00, 0xf4, 0xf5,
+	0xd8, 0x27, 0x3e, 0x23, 0xda, 0x4d, 0x67, 0xe3, 0xdd, 0xfc, 0x8d, 0x45, 0x0c, 0x35, 0x20, 0x1e,
+	0xdd, 0xf5, 0x19, 0x19, 0x96, 0x70, 0x53, 0xab, 0xd5, 0x02, 0xad, 0x42, 0xdb, 0xa3, 0x8c, 0x0a,
+	0xdf, 0x8d, 0x00, 0x54, 0xd1, 0x36, 0x87, 0x25, 0xdc, 0x8a, 0xa5, 0xda, 0xe8, 0xa3, 0xb4, 0xa6,
+	0x6b, 0x57, 0xd2, 0x51, 0x52, 0xb2, 0x0f, 0xa0, 0xfd, 0xf2, 0x95, 0x1f, 0x10, 0xdb, 0xe5, 0x6c,
+	0xec, 0x7b, 0xba, 0x9a, 0x9a, 0xb8, 0xa5, 0x65, 0xdb, 0x5a, 0xb4, 0x55, 0x87, 0xaa, 0xf2, 0x65,
+	0xfd, 0x6b, 0x40, 0x27, 0x5f, 0x9c, 0x68, 0x03, 0x20, 0x7e, 0x0b, 0x84, 0xb2, 0x6b, 0xc8, 0x2f,
+	0x63, 0x85, 0x70, 0x04, 0xa7, 0xaf, 0xa6, 0xb3, 0xf1, 0xf4, 0xd6, 0xcc, 0xd0, 0x53, 0xb1, 0x62,
+	0x8d, 0x95, 0x39, 0x87, 0x7a, 0x22, 0x95, 0x1b, 0xcf, 0xe1, 0x33, 0x6f, 0x65, 0x0d, 0xaa, 0xfa,
+	0xb6, 0x5a, 0xb0, 0xf0, 0x6c, 0xb4, 0x3b, 0xda, 0x3f, 0x1a, 0x75, 0x4b, 0x68, 0x11, 0x9a, 0xfb,
+	0xcf, 0x07, 0x18, 0xef, 0xf4, 0x07, 0x07, 0x5d, 0x43, 0xe9, 0x06, 0x2f, 0x0e, 0x07, 0xa3, 0xfe,
+	0x41, 0xb7, 0x6c, 0x7d, 0x09, 0x30, 0x65, 0x0e, 0xf4, 0x10, 0xaa, 0x9a, 0x7e, 0xa2, 0xa0, 0xcd,
+	0x79, 0x29, 0x54, 0x76, 0x58, 0x5b, 0x59, 0x02, 0xba, 0xb3, 0xac, 0x90, 0x49, 0x93, 0x71, 0x63,
+	0x9a, 0x36, 0x00, 0x32, 0x94, 0x54, 0xbe, 0x3a, 0xc0, 0xa9, 0x95, 0xf5, 0x0c, 0xd0, 0x65, 0x6e,
+	0x40, 0x5f, 0x41, 0x23, 0x25, 0x9b, 0xc8, 0xef, 0xea, 0xdc, 0x14, 0x0c, 0xce, 0x4f, 0x1d, 0x46,
+	0x28, 0xf9, 0x9a, 0xb9, 0xc7, 0x5c, 0xe0, 0x74, 0x93, 0xf5, 0x8b, 0x01, 0x8d, 0xf4, 0x01, 0xf4,
+	0x32, 0x9c, 0x72, 0x75, 0x14, 0x53, 0xc2, 0x18, 0xc0, 0xe2, 0xc4, 0x11, 0x27, 0x94, 0xd8, 0x21,
+	0x7f, 0x25, 0x5c, 0x1a, 0x87, 0xb2, 0x9c, 0xdb, 0x14, 0x77, 0xef, 0x6f, 0xb5, 0xe1, 0x81, 0xb6,
+	0xc3, 0xed, 0x49, 0x66, 0x65, 0xed, 0x01, 0x4c, 0xa9, 0x03, 0x3d, 0xcd, 0xb1, 0x50, 0x74, 0x8c,
+	0xfb, 0xf3, 0x10, 0xa7, 0x7b, 0xb2, 0x64, 0xb3, 0xb5, 0x00, 0x35, 0xca, 0xa4, 0xb8, 0x58, 0xf9,
+	0xb3, 0x03, 0x4b, 0xdb, 0x82, 0x87, 0x21, 0xa6, 0x63, 0x2a, 0x28, 0x73, 0x69, 0xa8, 0xb2, 0x14,
+	0x1f, 0xf5, 0x9a, 0x2c, 0x45, 0x16, 0x45, 0xba, 0xfb, 0x8c, 0x9b, 0xd9, 0xee, 0x7e, 0x08, 0x4d,
+	0x91, 0x28, 0xe3, 0xf7, 0xfc, 0x69, 0x01, 0xb4, 0xf4, 0x53, 0xb1, 0x47, 0x0a, 0xa4, 0x3a, 0x80,
+	0xa0, 0x41, 0x94, 0xfb, 0xea, 0x8d, 0x1d, 0xe0, 0x32, 0x68, 0x90, 0xb4, 0x97, 0x14, 0x46, 0xcd,
+	0x0f, 0xae, 0x13, 0x04, 0x54, 0xc4, 0x5c, 0xb3, 0x5e, 0x00, 0x70, 0x5b, 0x6f, 0x54, 0xf3, 0x43,
+	0x04, 0xa1, 0xce, 0xa7, 0xbe, 0x42, 0x5f, 0x26, 0x6d, 0x7d, 0xb3, 0x20, 0x9c, 0xda, 0xaa, 0xce,
+	0x97, 0xc0, 0xa0, 0x1f, 0xa0, 0xad, 0xcf, 0x4a, 0x49, 0x34, 0x2d, 0x44, 0xdd, 0xfc, 0xf3, 0xa2,
+	0x61, 0x53, 0x12, 0x8f, 0x0b, 0x2d, 0x31, 0x5d, 0xaa, 0x79, 0x47, 0x81, 0x66, 0xa7, 0x85, 0xc6,
+	0x8d, 0xf3, 0xce, 0x2c, 0xbe, 0x42, 0xca, 0xcd, 0x0a, 0x1d, 0x96, 0x93, 0x58, 0xbf, 0x19, 0x49,
+	0x33, 0x2c, 0xc4, 0x39, 0xaf, 0xa9, 0xd6, 0xd0, 0x3a, 0xc0, 0x84, 0x0a, 0x8f, 0xda, 0x3f, 0xfb,
+	0xf2, 0xd8, 0xac, 0x2c, 0x57, 0xae, 0x28, 0x82, 0xa6, 0xb6, 0x3a, 0xf2, 0xe5, 0xb1, 0xf5, 0xbb,
+	0x01, 0xcd, 0x34, 0xc2, 0x99, 0x96, 0x67, 0xdc, 0xb5, 0xe5, 0x95, 0xe7, 0xb5, 0xbc, 0x2c, 0xab,
+	0x55, 0x6e, 0xc1, 0x6a, 0x69, 0x93, 0xfb, 0xcb, 0x80, 0x46, 0xf2, 0xd0, 0xd5, 0x54, 0x9f, 0xb9,
+	0xef, 0xb9, 0x53, 0xbd, 0xbe, 0xe9, 0x7c, 0x84, 0xe5, 0xbb, 0x46, 0x58, 0x99, 0x17, 0xa1, 0x09,
+	0x0b, 0x5c, 0x10, 0x9f, 0x39, 0x81, 0x2e, 0xdd, 0x1a, 0x4e, 0x96, 0x4a, 0x23, 0xe8, 0x19, 0x15,
+	0x61, 0x34, 0x6d, 0x37, 0x70, 0xb2, 0x4c, 0x83, 0xfa, 0xc3, 0x80, 0x7a, 0x54, 0x6c, 0x8a, 0xce,
+	0xe2, 0x7a, 0xbd, 0x86, 0xce, 0xe2, 0x72, 0xcc, 0x5e, 0x6a, 0xf9, 0x16, 0x97, 0x7a, 0xf9, 0x05,
+	0x56, 0x6e, 0xc5, 0xf6, 0xff, 0x18, 0xd0, 0x48, 0x8a, 0xfb, 0xcd, 0x06, 0xb0, 0x17, 0xcf, 0x2a,
+	0xd1, 0x9c, 0xf6, 0xe8, 0x16, 0x64, 0x94, 0x99, 0x52, 0x56, 0x3e, 0x9e, 0x37, 0x71, 0x00, 0xd4,
+	0xfb, 0x3b, 0x78, 0xb0, 0x7d, 0xd8, 0x35, 0x50, 0x1b, 0x1a, 0xc9, 0xf4, 0xd1, 0x2d, 0x5b, 0x8f,
+	0xa1, 0x95, 0xe1, 0x9e, 0x82, 0x03, 0xc7, 0x05, 0x74, 0xf2, 0xc4, 0xf2, 0xbf, 0x1f, 0xf3, 0x5d,
+	0x2f, 0x2d, 0x6d, 0xa7, 0x5b, 0x8f, 0xe0, 0x7d, 0x97, 0x4f, 0x7a, 0x1e, 0xe7, 0x5e, 0x40, 0x7b,
+	0x84, 0x9e, 0x49, 0xce, 0x83, 0x30, 0x0b, 0xf6, 0xfd, 0x3b, 0xd9, 0x3f, 0xf9, 0xb6, 0xc7, 0x6d,
+	0x2d, 0x7e, 0x59, 0xd7, 0x3f, 0x9b, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0xf5, 0x0f, 0x2b, 0x85,
+	0x10, 0x10, 0x00, 0x00,
 }

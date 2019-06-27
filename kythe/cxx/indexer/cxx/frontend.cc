@@ -19,9 +19,11 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/str_format.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/gzip_stream.h"
@@ -47,6 +49,8 @@ DEFINE_int32(min_size, 4096, "Minimum size of an entry bundle");
 DEFINE_int32(max_size, 1024 * 32, "Maximum size of an entry bundle");
 DEFINE_bool(cache_stats, false, "Show cache stats");
 DEFINE_string(icorpus, "", "Corpus to use for files specified with -i");
+DEFINE_string(ibuild_config, "",
+              "Build config to use for files specified with -i");
 DEFINE_bool(normalize_file_vnames, false, "Normalize incoming file vnames.");
 DEFINE_string(experimental_dynamic_claim_cache, "",
               "Use a memcache instance for dynamic claims (EXPERIMENTAL)");
@@ -66,6 +70,10 @@ namespace {
 /// The prefix prepended to silent inputs. Only checked when "--test_claim"
 /// is enabled.
 constexpr char kSilentPrefix[] = "silent:";
+
+/// The message type URI for the build details message.
+constexpr char kBuildDetailsURI[] = "kythe.io/proto/kythe.proto.BuildDetails";
+
 /// \return the input name stripped of its prefix if it's silent; an empty
 /// string otherwise.
 llvm::StringRef strip_silent_input_prefix(llvm::StringRef argument) {
@@ -111,15 +119,6 @@ void MaybeNormalizeFileVNames(IndexerJob* job) {
   for (auto& input : *job->unit.mutable_required_input()) {
     input.mutable_v_name()->set_path(CleanPath(input.v_name().path()));
     input.mutable_v_name()->clear_signature();
-  }
-}
-
-void UpdateJobWdirFromUnit(IndexerJob* job) {
-  job->working_directory = job->unit.working_directory();
-  if (!llvm::sys::path::is_absolute(job->working_directory)) {
-    llvm::SmallString<1024> stored_wd;
-    CHECK(!llvm::sys::fs::make_absolute(stored_wd));
-    job->working_directory = stored_wd.str();
   }
 }
 
@@ -184,7 +183,6 @@ void DecodeKZipFile(const std::string& path, bool silent,
     }
     job.unit = compilation->unit();
 
-    UpdateJobWdirFromUnit(&job);
     MaybeNormalizeFileVNames(&job);
     visit(job);
 
@@ -247,7 +245,6 @@ void IndexerContext::LoadDataFromIndex(const std::string& file_or_cu,
     IndexerJob job;
     job.silent = silent;
     DecodeIndexFile(name, &job.virtual_files, &job.unit);
-    UpdateJobWdirFromUnit(&job);
     MaybeNormalizeFileVNames(&job);
     visit(job);
   }
@@ -261,7 +258,7 @@ void IndexerContext::LoadDataFromUnpackedFile(
   std::string source_file_name = default_filename;
   llvm::SmallString<1024> cwd;
   CHECK(!llvm::sys::fs::current_path(cwd));
-  job.working_directory = cwd.str();
+  job.unit.set_working_directory(cwd.str());
   if (FLAGS_i != "-") {
     read_fd = open(FLAGS_i.c_str(), O_RDONLY);
     if (read_fd == -1) {
@@ -293,6 +290,13 @@ void IndexerContext::LoadDataFromUnpackedFile(
     job.unit.add_argument(arg);
   }
   job.unit.mutable_v_name()->set_corpus(FLAGS_icorpus);
+  if (!FLAGS_ibuild_config.empty()) {
+    proto::BuildDetails details;
+    details.set_build_config(FLAGS_ibuild_config);
+    auto* any = job.unit.add_details();
+    any->PackFrom(details);
+    any->set_type_url(kBuildDetailsURI);
+  }
   MaybeNormalizeFileVNames(&job);
   visit(job);
 }
@@ -303,7 +307,7 @@ void IndexerContext::InitializeClaimClient() {
     dynamic_claims->set_max_redundant_claims(
         FLAGS_experimental_dynamic_overclaim);
     if (!dynamic_claims->OpenMemcache(FLAGS_experimental_dynamic_claim_cache)) {
-      fprintf(stderr, "Can't open memcached\n");
+      absl::FPrintF(stderr, "Can't open memcached\n");
       exit(1);
     }
     claim_client_ = std::move(dynamic_claims);
@@ -372,10 +376,6 @@ IndexerContext::~IndexerContext() { CloseOutputStreams(); }
 
 void IndexerContext::EnumerateCompilations(
     const CompilationVisitCallback& visit) {
-  // This forces the BuildDetails proto descriptor to be added to the pool so
-  // we can deserialize it.
-  proto::BuildDetails needed_for_proto_deserialization;
-
   if (unpacked_inputs_) {
     LoadDataFromUnpackedFile(default_filename_, visit);
   } else {

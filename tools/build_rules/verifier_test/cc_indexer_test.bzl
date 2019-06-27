@@ -15,16 +15,17 @@
 #
 
 load(
+    "@bazel_tools//tools/build_defs/cc:action_names.bzl",
+    "CPP_COMPILE_ACTION_NAME",
+)
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@bazel_skylib//lib:paths.bzl", "paths")
+load(
     ":verifier_test.bzl",
     "KytheEntries",
     "KytheVerifierSources",
     "extract",
     "verifier_test",
-)
-load(":toolchain_utils.bzl", "find_cpp_toolchain")
-load(
-    "@bazel_tools//tools/build_defs/cc:action_names.bzl",
-    "CPP_COMPILE_ACTION_NAME",
 )
 
 UNSUPPORTED_FEATURES = [
@@ -43,55 +44,81 @@ CxxCompilationUnits = provider(
 )
 
 _VERIFIER_FLAGS = {
-    "convert_marked_source": False,
-    "ignore_dups": False,
     "check_for_singletons": False,
+    "convert_marked_source": False,
     "goal_prefix": "//-",
+    "ignore_dups": False,
 }
 
 _INDEXER_FLAGS = {
+    "experimental_alias_template_instantiations": False,
+    "experimental_drop_cpp_fwd_decl_docs": False,
+    "experimental_drop_instantiation_independent_data": False,
+    "experimental_drop_objc_fwd_class_docs": False,
+    "experimental_usr_byte_size": 0,
     "fail_on_unimplemented_builtin": True,
     "ignore_unimplemented": False,
     "index_template_instantiations": True,
-    "experimental_alias_template_instantiations": False,
-    "experimental_drop_instantiation_independent_data": False,
-    "experimental_drop_objc_fwd_class_docs": False,
-    "experimental_drop_cpp_fwd_decl_docs": False,
-    "experimental_usr_byte_size": 0,
+    "ibuild_config": "",
 }
 
-def _compiler_options(ctx, cpp, copts, includes):
+def _compiler_options(ctx, cc_toolchain, copts, includes, cc_info):
     """Returns the list of compiler flags from the C++ toolchain."""
+    feature_configuration = cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = ctx.features,
+        unsupported_features = ctx.disabled_features + UNSUPPORTED_FEATURES,
+    )
+    variables = cc_common.create_compile_variables(
+        feature_configuration = feature_configuration,
+        cc_toolchain = cc_toolchain,
+        user_compile_flags = copts,
+        include_directories = cc_info.compilation_context.includes,
+        quote_include_directories = cc_info.compilation_context.quote_includes,
+        system_include_directories = depset(direct = includes, transitive = [cc_info.compilation_context.system_includes]),
+        add_legacy_cxx_options = True,
+    )
 
-    # Bazel is missing these attributes until 0.16.0,
-    # but we still want to use them when/if they are present.
-    if hasattr(cc_common, "get_memory_inefficient_command_line"):
-        feature_configuration = cc_common.configure_features(
-            cc_toolchain = cpp,
-            requested_features = ctx.features,
-            unsupported_features = ctx.disabled_features + UNSUPPORTED_FEATURES,
-        )
-        variables = cc_common.create_compile_variables(
-            feature_configuration = feature_configuration,
-            cc_toolchain = cpp,
-            user_compile_flags = copts,
-            system_include_directories = depset(includes),
-            add_legacy_cxx_options = True,
-        )
-        return cc_common.get_memory_inefficient_command_line(
-            feature_configuration = feature_configuration,
-            action_name = CPP_COMPILE_ACTION_NAME,
-            variables = variables,
-        )
+    # TODO(schroederc): use memory-efficient Args, when available
+    args = ctx.actions.args()
+    args.add_all(cc_common.get_memory_inefficient_command_line(
+        feature_configuration = feature_configuration,
+        action_name = CPP_COMPILE_ACTION_NAME,
+        variables = variables,
+    ))
+    return args
 
-    options = []
-    if hasattr(cpp, "compiler_options"):
-        options += cpp.compiler_options()
-    if hasattr(cpp, "unfiltered_compiler_options"):
-        options += cpp.unfiltered_compiler_options([])
-    options += copts
-    options += ["-isystem%s" % d for d in includes]
-    return options
+def _compile_and_link(ctx, cc_info_providers, sources, headers):
+    cc_toolchain = find_cpp_toolchain(ctx)
+    feature_configuration = cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = ctx.features,
+        unsupported_features = ctx.disabled_features + UNSUPPORTED_FEATURES,
+    )
+    compile_ctx, compile_outs = cc_common.compile(
+        name = ctx.label.name,
+        actions = ctx.actions,
+        cc_toolchain = cc_toolchain,
+        srcs = sources,
+        public_hdrs = headers,
+        feature_configuration = feature_configuration,
+        compilation_contexts = [provider.compilation_context for provider in cc_info_providers],
+    )
+    linking_ctx, linking_out = cc_common.create_linking_context_from_compilation_outputs(
+        name = ctx.label.name + "_transitive_library",
+        actions = ctx.actions,
+        feature_configuration = feature_configuration,
+        cc_toolchain = cc_toolchain,
+        compilation_outputs = compile_outs,
+        linking_contexts = [provider.linking_context for provider in cc_info_providers],
+    )
+    return struct(
+        transitive_library_file = linking_out,
+        compilation_context = compile_ctx,
+        linking_context = linking_ctx,
+    )
 
 def _flag(name, typename, value):
     if value == None:  # Omit None flags.
@@ -133,42 +160,138 @@ def _transitive_entries(deps):
         if KytheEntries in dep:
             files += dep[KytheEntries].files
             compressed += dep[KytheEntries].compressed
-    return KytheEntries(files = depset(transitive = files), compressed = depset(transitive = compressed))
+    return KytheEntries(compressed = depset(transitive = compressed), files = depset(transitive = files))
+
+def _generate_files(ctx, files, extension):
+    return [
+        ctx.actions.declare_file(
+            paths.replace_extension(
+                paths.relativize(f.path, ctx.label.package),
+                extension,
+            ),
+        )
+        for f in files
+    ]
+
+def _format_path_and_short_path(f):
+    return "-I{0}={1}".format(f.short_path, f.path)
+
+def _get_short_path(f):
+    return f.short_path
+
+_KytheProtoInfo = provider()
+
+def _cc_kythe_proto_library_aspect_impl(target, ctx):
+    sources = _generate_files(ctx, target[ProtoInfo].direct_sources, ".pb.cc")
+    headers = _generate_files(ctx, target[ProtoInfo].direct_sources, ".pb.h")
+    args = ctx.actions.args()
+    args.add("--plugin=protoc-gen-PLUGIN=" + ctx.executable._plugin.path)
+    args.add("--PLUGIN_out=:" + ctx.bin_dir.path + "/")
+    args.add_all(target[ProtoInfo].transitive_sources, map_each = _format_path_and_short_path)
+    args.add_all(target[ProtoInfo].direct_sources, map_each = _get_short_path)
+    ctx.actions.run(
+        arguments = [args],
+        outputs = sources + headers,
+        inputs = target[ProtoInfo].transitive_sources,
+        executable = ctx.executable._protoc,
+        tools = [ctx.executable._plugin],
+        mnemonic = "GenerateKytheCCProto",
+    )
+    cc_info_providers = [lib[CcInfo] for lib in [target, ctx.attr._runtime] if CcInfo in lib]
+    cc_context = _compile_and_link(ctx, cc_info_providers, sources = sources, headers = headers)
+    return [
+        _KytheProtoInfo(files = depset(sources + headers)),
+        CcInfo(
+            compilation_context = cc_context.compilation_context,
+            linking_context = cc_context.linking_context,
+        ),
+    ]
+
+_cc_kythe_proto_library_aspect = aspect(
+    attr_aspects = ["deps"],
+    attrs = {
+        "_protoc": attr.label(
+            default = Label("@com_google_protobuf//:protoc"),
+            executable = True,
+            cfg = "host",
+        ),
+        "_plugin": attr.label(
+            default = Label("//kythe/cxx/tools:proto_metadata_plugin"),
+            executable = True,
+            cfg = "host",
+        ),
+        "_runtime": attr.label(
+            default = Label("@com_google_protobuf//:protobuf"),
+            cfg = "target",
+        ),
+        # Do not add references, temporary attribute for find_cpp_toolchain.
+        "_cc_toolchain": attr.label(
+            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
+        ),
+    },
+    fragments = ["cpp"],
+    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    implementation = _cc_kythe_proto_library_aspect_impl,
+)
+
+def _cc_kythe_proto_library(ctx):
+    return [
+        ctx.attr.deps[0][CcInfo],
+        DefaultInfo(files = ctx.attr.deps[0][_KytheProtoInfo].files),
+    ]
+
+cc_kythe_proto_library = rule(
+    attrs = {
+        "deps": attr.label_list(
+            providers = [ProtoInfo],
+            aspects = [_cc_kythe_proto_library_aspect],
+        ),
+    },
+    implementation = _cc_kythe_proto_library,
+)
 
 def _cc_extract_kzip_impl(ctx):
     cpp = find_cpp_toolchain(ctx)
-    if ctx.attr.add_toolchain_include_directories:
+    if cpp.libc == "macosx":
         toolchain_includes = cpp.built_in_include_directories
     else:
         toolchain_includes = []
+    cc_info = cc_common.merge_cc_infos(cc_infos = [
+        src[CcInfo]
+        for src in ctx.attr.srcs + ctx.attr.deps
+        if CcInfo in src
+    ])
     outputs = depset([
         extract(
+            srcs = depset([src]),
             ctx = ctx,
-            kzip = getattr(ctx.outputs, src.basename),
             extractor = ctx.executable.extractor,
-            vnames_config = ctx.file.vnames_config,
-            srcs = [src],
+            kzip = ctx.actions.declare_file("{}/{}.kzip".format(ctx.label.name, src.basename)),
             opts = _compiler_options(
                 ctx,
                 cpp,
                 ctx.attr.opts,
                 toolchain_includes,
+                cc_info,
             ),
-            deps = ctx.files.deps + ctx.files.srcs,
+            vnames_config = ctx.file.vnames_config,
+            deps = depset(
+                direct = ctx.files.srcs,
+                transitive = [depset(ctx.files.deps), cc_info.compilation_context.headers],
+            ),
         )
         for src in ctx.files.srcs
+        if not src.path.endswith(".h")  # Don't extract headers.
     ])
     for dep in ctx.attr.deps:
         if CxxCompilationUnits in dep:
             outputs += dep[CxxCompilationUnits].files
     return [
+        DefaultInfo(files = outputs),
         CxxCompilationUnits(files = outputs),
         KytheVerifierSources(files = depset(ctx.files.srcs)),
         _transitive_entries(ctx.attr.deps),
     ]
-
-def _cc_extract_kzip_outs(name, srcs):
-    return dict([(src.name, "{}/{}.kzip".format(name, src.name)) for src in srcs])
 
 cc_extract_kzip = rule(
     attrs = {
@@ -181,6 +304,25 @@ cc_extract_kzip = rule(
                 ".c",
                 ".h",
             ],
+        ),
+        "copts": attr.string_list(
+            doc = """Options which are required to compile/index the sources.
+
+            These will be included in the resulting .kzip CompilationUnits.
+            """,
+        ),
+        "extractor": attr.label(
+            default = Label("//kythe/cxx/extractor:cxx_extractor"),
+            executable = True,
+            cfg = "host",
+        ),
+        "opts": attr.string_list(
+            doc = "Options which will be passed to the extractor as arguments.",
+        ),
+        "vnames_config": attr.label(
+            doc = "vnames_config file to be used by the extractor.",
+            default = Label("//external:vnames_config"),
+            allow_single_file = [".json"],
         ),
         "deps": attr.label_list(
             doc = """Files which are required by the extracted sources.
@@ -196,33 +338,10 @@ cc_extract_kzip = rule(
                 ".meta",  # Cross language metadata files.
             ],
             providers = [
+                [CcInfo],
                 [KytheEntries],
                 [CxxCompilationUnits],
             ],
-        ),
-        "vnames_config": attr.label(
-            doc = "vnames_config file to be used by the extractor.",
-            default = Label("//external:vnames_config"),
-            allow_single_file = [".json"],
-        ),
-        "opts": attr.string_list(
-            doc = "Options which will be passed to the extractor as arguments.",
-        ),
-        "add_toolchain_include_directories": attr.bool(
-            doc = ("Whether or not to explicitly add the C++ toolchain " +
-                   "directories to the header search path."),
-            default = False,
-        ),
-        "copts": attr.string_list(
-            doc = """Options which are required to compile/index the sources.
-
-            These will be included in the resulting .kzip CompilationUnits.
-            """,
-        ),
-        "extractor": attr.label(
-            default = Label("//kythe/cxx/extractor:cxx_extractor"),
-            executable = True,
-            cfg = "host",
         ),
         # Do not add references, temporary attribute for find_cpp_toolchain.
         "_cc_toolchain": attr.label(
@@ -234,7 +353,7 @@ cc_extract_kzip = rule(
     Each file in srcs will be extracted into a separate .kzip file, based on the name
     of the source.
     """,
-    outputs = _cc_extract_kzip_outs,
+    fragments = ["cpp"],
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
     implementation = _cc_extract_kzip_impl,
 )
@@ -258,8 +377,8 @@ def _extract_bundle_impl(ctx):
         outputs = [ctx.outputs.kzip],
         mnemonic = "ExtractBundle",
         env = {
-            "KYTHE_ROOT_DIRECTORY": ".",
             "KYTHE_OUTPUT_FILE": ctx.outputs.kzip.path,
+            "KYTHE_ROOT_DIRECTORY": ".",
             "KYTHE_VNAMES": ctx.file.vnames_config.path,
         },
         arguments = [
@@ -283,15 +402,6 @@ cc_extract_bundle = rule(
             mandatory = True,
             allow_single_file = True,
         ),
-        "vnames_config": attr.label(
-            default = Label("//kythe/cxx/indexer/cxx/testdata:test_vnames.json"),
-            allow_single_file = True,
-        ),
-        "unbundle": attr.label(
-            default = Label("//tools/build_rules/verifier_test:unbundle"),
-            executable = True,
-            cfg = "host",
-        ),
         "extractor": attr.label(
             default = Label("//kythe/cxx/extractor:cxx_extractor"),
             executable = True,
@@ -299,6 +409,15 @@ cc_extract_bundle = rule(
         ),
         "opts": attr.string_list(
             doc = "Additional arguments to pass to the extractor.",
+        ),
+        "unbundle": attr.label(
+            default = Label("//tools/build_rules/verifier_test:unbundle"),
+            executable = True,
+            cfg = "host",
+        ),
+        "vnames_config": attr.label(
+            default = Label("//kythe/cxx/indexer/cxx/testdata:test_vnames.json"),
+            allow_single_file = True,
         ),
     },
     doc = "Extracts a bundled C++ indexer test into a .kzip file.",
@@ -345,6 +464,11 @@ _bazel_extract_kzip = rule(
             mandatory = True,
             allow_single_file = [".xa"],
         ),
+        "extractor": attr.label(
+            default = Label("//kythe/cxx/extractor:cxx_extractor_bazel"),
+            executable = True,
+            cfg = "host",
+        ),
         "scripts": attr.label_list(
             cfg = "host",
             allow_files = True,
@@ -352,11 +476,6 @@ _bazel_extract_kzip = rule(
         "vnames_config": attr.label(
             default = Label("//external:vnames_config"),
             allow_single_file = True,
-        ),
-        "extractor": attr.label(
-            default = Label("//kythe/cxx/extractor:cxx_extractor_bazel"),
-            executable = True,
-            cfg = "host",
         ),
     },
     doc = "Extracts a Bazel extra action binary proto file into a .kzip.",
@@ -445,10 +564,10 @@ def _cc_index_impl(ctx):
             sources += [dep[KytheVerifierSources].files]
     return [
         KytheVerifierSources(files = depset(transitive = sources)),
-        KytheEntries(files = entries, compressed = depset([ctx.outputs.entries])),
+        KytheEntries(compressed = depset([ctx.outputs.entries]), files = entries),
     ]
 
-# TODO(shahms): Support cc_library srcs and deps, along with cc toolchain support.
+# TODO(shahms): Support cc_library deps, along with cc toolchain support.
 # TODO(shahms): Split objc_index into a separate rule.
 cc_index = rule(
     attrs = {
@@ -465,6 +584,17 @@ cc_index = rule(
             ],
             providers = [CxxCompilationUnits],
         ),
+        "copts": attr.string_list(
+            doc = "Options to pass to the compiler while indexing.",
+        ),
+        "indexer": attr.label(
+            default = Label("//kythe/cxx/indexer/cxx:indexer"),
+            executable = True,
+            cfg = "host",
+        ),
+        "opts": attr.string_list(
+            doc = "Options to pass to the indexer.",
+        ),
         "deps": attr.label_list(
             doc = "Files required to index srcs or entries to include in the index.",
             # .meta files, .h files, .entries{,.gz}, KytheEntries
@@ -475,17 +605,6 @@ cc_index = rule(
                 ".meta",  # Cross language metadata files.
             ],
             providers = [KytheEntries],
-        ),
-        "opts": attr.string_list(
-            doc = "Options to pass to the indexer.",
-        ),
-        "copts": attr.string_list(
-            doc = "Options to pass to the compiler while indexing.",
-        ),
-        "indexer": attr.label(
-            default = Label("//kythe/cxx/indexer/cxx:indexer"),
-            executable = True,
-            cfg = "host",
         ),
     },
     doc = """Produces a Kythe index from the C++ source files.
@@ -518,33 +637,33 @@ def _indexer_test(
             fail("Bundled indexer tests require exactly one src!")
         cc_extract_bundle(
             name = name + "_kzip",
-            src = srcs[0],
             testonly = True,
-            tags = tags,
+            src = srcs[0],
             opts = copts,
             restricted_to = restricted_to,
+            tags = tags,
         )
         srcs = [":" + name + "_kzip"]
     cc_index(
         name = name + "_entries",
-        srcs = srcs,
-        deps = deps,
-        tags = tags,
         testonly = True,
+        srcs = srcs,
         copts = copts if not bundled else [],
-        restricted_to = restricted_to,
-        opts = (["-claim_unknown=false"] if bundled else []) + flags.indexer,
         indexer = indexer,
+        opts = (["-claim_unknown=false"] if bundled else []) + flags.indexer,
+        restricted_to = restricted_to,
+        tags = tags,
+        deps = deps,
     )
     verifier_test(
         name = name,
+        size = size,
         # TODO(shahms): Use sources directly?
         srcs = [":" + name + "_entries"],
-        tags = tags,
-        size = size,
         expect_success = not expect_fail_verify,
-        restricted_to = restricted_to,
         opts = flags.verifier,
+        restricted_to = restricted_to,
+        tags = tags,
     )
 
 # If a test is expected to pass on darwin but not on linux, you can set
@@ -662,30 +781,30 @@ def objc_bazel_extractor_test(name, src, data, size = "small", tags = [], restri
     """
     _bazel_extract_kzip(
         name = name + "_kzip",
+        testonly = True,
         srcs = [src],
         data = data,
         extractor = "//kythe/cxx/extractor:objc_extractor_bazel",
+        restricted_to = restricted_to,
         scripts = [
             "//third_party/bazel:get_devdir",
             "//third_party/bazel:get_sdkroot",
         ],
         tags = tags,
-        restricted_to = restricted_to,
-        testonly = True,
     )
     cc_index(
         name = name + "_entries",
-        srcs = [":" + name + "_kzip"],
-        tags = tags,
-        restricted_to = restricted_to,
         testonly = True,
+        srcs = [":" + name + "_kzip"],
+        restricted_to = restricted_to,
+        tags = tags,
     )
     return verifier_test(
         name = name,
-        srcs = [":" + name + "_entries"],
         size = size,
-        restricted_to = restricted_to,
+        srcs = [":" + name + "_entries"],
         opts = ["--ignore_dups"],
+        restricted_to = restricted_to,
         tags = tags,
     )
 
@@ -698,23 +817,23 @@ def cc_bazel_extractor_test(name, src, data, size = "small", tags = []):
     """
     _bazel_extract_kzip(
         name = name + "_kzip",
+        testonly = True,
         srcs = [src],
         data = data,
         tags = tags,
-        testonly = True,
     )
     cc_index(
         name = name + "_entries",
+        testonly = True,
         srcs = [":" + name + "_kzip"],
         tags = tags,
-        testonly = True,
     )
     return verifier_test(
         name = name,
         size = size,
-        tags = tags,
-        opts = ["--ignore_dups"],
         srcs = [":" + name + "_entries"],
+        opts = ["--ignore_dups"],
+        tags = tags,
     )
 
 def cc_extractor_test(
@@ -730,29 +849,28 @@ def cc_extractor_test(
     args = ["-std=" + std, "-c"]
     cc_extract_kzip(
         name = name + "_kzip",
-        srcs = srcs,
-        deps = data,
-        tags = tags,
-        restricted_to = restricted_to,
         testonly = True,
+        srcs = srcs,
         opts = args,
-        add_toolchain_include_directories = True,
+        restricted_to = restricted_to,
+        tags = tags,
+        deps = data,
     )
     cc_index(
         name = name + "_entries",
-        srcs = [":" + name + "_kzip"],
-        deps = data,
-        opts = ["--ignore_unimplemented"],
-        tags = tags,
-        restricted_to = restricted_to,
         testonly = True,
+        srcs = [":" + name + "_kzip"],
+        opts = ["--ignore_unimplemented"],
+        restricted_to = restricted_to,
+        tags = tags,
+        deps = data,
     )
     return verifier_test(
         name = name,
         size = size,
         srcs = [":" + name + "_entries"],
-        deps = deps,
         opts = ["--ignore_dups"],
         restricted_to = restricted_to,
         tags = tags,
+        deps = deps,
     )

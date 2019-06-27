@@ -70,6 +70,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "absl/strings/str_format.h"
+#include "cxx_extractor.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "google/protobuf/io/coded_stream.h"
@@ -77,10 +79,8 @@
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/stubs/common.h"
 #include "kythe/cxx/extractor/language.h"
-#include "third_party/bazel/src/main/protobuf/extra_actions_base.pb.h"
-
-#include "cxx_extractor.h"
 #include "objc_bazel_support.h"
+#include "third_party/bazel/src/main/protobuf/extra_actions_base.pb.h"
 
 struct XAState {
   std::string extra_action_file;
@@ -122,8 +122,8 @@ static bool LoadSpawnInfo(const XAState& xa_state,
   }
 
   if (ContainsUnsupportedArg(args)) {
-    LOG(INFO) << "Not extracting " << info.owner()
-              << " because it had an unsupported argument.";
+    LOG(ERROR) << "Not extracting " << info.owner()
+               << " because it had an unsupported argument.";
     return false;
   }
 
@@ -161,8 +161,8 @@ static bool LoadCppInfo(const XAState& xa_state,
   }
 
   if (ContainsUnsupportedArg(args)) {
-    LOG(INFO) << "Not extracting " << info.owner()
-              << " because it had an unsupported argument.";
+    LOG(ERROR) << "Not extracting " << info.owner()
+               << " because it had an unsupported argument.";
     return false;
   }
 
@@ -202,10 +202,11 @@ int main(int argc, char* argv[]) {
   google::InitGoogleLogging(argv[0]);
   gflags::SetVersionString("0.2");
   if (argc != 4 && argc != 6) {
-    fprintf(stderr,
-            "Invalid number of arguments:\n\tCall as %s extra-action-file "
-            "output-file vname-config [devdir-script sdkroot-script]\n",
-            argv[0]);
+    absl::FPrintF(
+        stderr,
+        "Invalid number of arguments:\n\tCall as %s extra-action-file "
+        "output-file vname-config [devdir-script sdkroot-script]\n",
+        argv[0]);
     return 1;
   }
   XAState xa_state;
@@ -225,6 +226,7 @@ int main(int argc, char* argv[]) {
   if (success) {
     config.Extract(kythe::supported_language::Language::kObjectiveC);
   } else {
+    LOG(ERROR) << "Couldn't load extra action";
     // If we couldn't extract, just write an empty output file. This way the
     // extra_action will be a success from bazel's perspective, which should
     // remove some log spam.

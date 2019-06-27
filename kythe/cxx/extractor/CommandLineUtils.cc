@@ -17,17 +17,19 @@
 
 #include "CommandLineUtils.h"
 
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Support/Regex.h"
-
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <algorithm>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include "absl/strings/str_format.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Regex.h"
 
 namespace kythe {
 namespace common {
@@ -46,7 +48,7 @@ class FullMatchRegex {
       : InnerRegex("^(" + Regex.str() + ")$", llvm::Regex::NoFlags) {
     std::string st;
     if (!InnerRegex.isValid(st)) {
-      fprintf(stderr, "%s (regex was %s)\n", st.c_str(), Regex.str().c_str());
+      absl::FPrintF(stderr, "%s (regex was %s)\n", st, Regex.str());
       assert(0 && "!InnerRegex.isValid()");
     }
   }

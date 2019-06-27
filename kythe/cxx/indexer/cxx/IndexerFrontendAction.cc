@@ -20,7 +20,11 @@
 #include <string>
 #include <utility>
 
+#include "KytheGraphObserver.h"
+#include "KytheVFS.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Tooling/Tooling.h"
 #include "kythe/cxx/common/indexing/KytheGraphRecorder.h"
@@ -29,11 +33,11 @@
 #include "kythe/cxx/indexer/cxx/KytheVFS.h"
 #include "kythe/cxx/indexer/cxx/proto_conversions.h"
 #include "kythe/proto/analysis.pb.h"
+#include "kythe/proto/buildinfo.pb.h"
 #include "kythe/proto/cxx.pb.h"
+#include "kythe/proto/filecontext.pb.h"
 #include "llvm/ADT/Twine.h"
 #include "third_party/llvm/src/clang_builtin_headers.h"
-
-#include "KytheGraphObserver.h"
 
 namespace kythe {
 
@@ -44,6 +48,10 @@ bool RunToolOnCode(std::unique_ptr<clang::FrontendAction> tool_action,
 }
 
 namespace {
+
+// Message type URI for the build details message.
+constexpr absl::string_view kBuildDetailsURI =
+    "kythe.io/proto/kythe.proto.BuildDetails";
 
 /// \brief Range wrapper around unpacked ContextDependentVersion rows.
 class FileContextRows {
@@ -78,14 +86,27 @@ bool DecodeDetails(const proto::CompilationUnit& Unit,
   return false;
 }
 
+std::string ExtractBuildConfig(const proto::CompilationUnit& Unit) {
+  proto::BuildDetails details;
+  for (const auto& Any : Unit.details()) {
+    if (Any.type_url() == kBuildDetailsURI) {
+      if (UnpackAny(Any, &details)) {
+        return details.build_config();
+      }
+    }
+  }
+  return "";
+}
+
 bool DecodeHeaderSearchInfo(const proto::CxxCompilationUnitDetails& Details,
                             HeaderSearchInfo& Info) {
   if (!Details.has_header_search_info()) {
     return false;
   }
   if (!Info.CopyFrom(Details)) {
-    fprintf(stderr,
-            "Warning: unit has header search info, but it is ill-formed.\n");
+    absl::FPrintF(
+        stderr,
+        "Warning: unit has header search info, but it is ill-formed.\n");
     return false;
   }
   return true;
@@ -124,6 +145,10 @@ std::string IndexCompilationUnit(
     const LibrarySupports* LibrarySupports,
     std::function<std::unique_ptr<IndexerWorklist>(IndexerASTVisitor*)>
         CreateWorklist) {
+  llvm::sys::path::Style Style =
+      kythe::IndexVFS::DetectStyleFromAbsoluteWorkingDirectory(
+          Unit.working_directory())
+          .value_or(llvm::sys::path::Style::posix);
   HeaderSearchInfo HSI;
   proto::CxxCompilationUnitDetails Details;
   bool HSIValid = false;
@@ -140,14 +165,18 @@ std::string IndexCompilationUnit(
   }
   clang::FileSystemOptions FSO;
   FSO.WorkingDir = Options.EffectiveWorkingDirectory;
+  if (Style == llvm::sys::path::Style::windows) {
+    FSO.WorkingDir = absl::StrCat("/", FSO.WorkingDir);
+  }
   for (auto& Path : HSI.paths) {
     Dirs.push_back(ToStringRef(Path.path));
   }
   llvm::IntrusiveRefCntPtr<IndexVFS> VFS(
-      new IndexVFS(FSO.WorkingDir, Files, Dirs));
+      new IndexVFS(Options.EffectiveWorkingDirectory, Files, Dirs, Style));
   KytheGraphRecorder Recorder(&Output);
   KytheGraphObserver Observer(&Recorder, &Client, MetaSupports, VFS,
-                              Options.ReportProfileEvent);
+                              Options.ReportProfileEvent,
+                              ExtractBuildConfig(Unit));
   if (Cache != nullptr) {
     Output.UseHashCache(Cache);
     Observer.StopDeferringNodes();
@@ -201,6 +230,7 @@ std::string IndexCompilationUnit(
   if (!FixupArgument.empty()) {
     Args.insert(Args.begin() + 1, FixupArgument);
   }
+
   // StdinAdjustSingleFrontendActionFactory takes ownership of its action.
   std::unique_ptr<StdinAdjustSingleFrontendActionFactory> Tool =
       absl::make_unique<StdinAdjustSingleFrontendActionFactory>(

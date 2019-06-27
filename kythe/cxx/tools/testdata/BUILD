@@ -24,8 +24,8 @@ shell_tool_test(
     ],
     scriptfile = "test_claim_tool_kindex.sh",
     tools = {
-        "KINDEX_TOOL_BIN": "//kythe/cxx/tools:kindex_tool",
         "CLAIM_TOOL_BIN": "//kythe/cxx/tools:static_claim",
+        "KINDEX_TOOL_BIN": "//kythe/cxx/tools:kindex_tool",
     },
 )
 
@@ -38,13 +38,13 @@ shell_tool_test(
     ],
     scriptfile = "test_claim_tool_index_pack.sh",
     tools = {
-        "KINDEX_TOOL_BIN": "//kythe/cxx/tools:kindex_tool",
         "CLAIM_TOOL_BIN": "//kythe/cxx/tools:static_claim",
         "INDEX_PACK_BIN": "//kythe/go/platform/tools/indexpack",
+        "KINDEX_TOOL_BIN": "//kythe/cxx/tools:kindex_tool",
     },
 )
 
-# TODO(T270): requires declarations generated in pipeline
+# TODO(#2375): (closed?) requires declarations generated in pipeline
 # sh_test(
 #     name = "def_decl_test",
 #     srcs = ["def_decl_test.sh"],

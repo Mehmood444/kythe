@@ -1,7 +1,7 @@
 package(default_visibility = ["//kythe:default_visibility"])
 
-load("//tools:build_rules/lexyacc.bzl", "genlex", "genyacc")
 load("//:visibility.bzl", "PUBLIC_VISIBILITY")
+load("//tools/build_rules/lexyacc:lexyacc.bzl", "genlex", "genyacc")
 
 genyacc(
     name = "parser",
@@ -67,6 +67,7 @@ cc_library(
     ],
     deps = [
         ":lexparse",
+        "//kythe/cxx/common:file_utils",
         "//kythe/cxx/common:kythe_uri",
         "//kythe/cxx/common:scope_guard",
         "//kythe/proto:common_cc_proto",
@@ -74,6 +75,7 @@ cc_library(
         "@com_github_gflags_gflags//:gflags",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_protobuf//:protobuf",
         "@com_googlesource_code_re2//:re2",
     ],
@@ -94,6 +96,7 @@ cc_library(
         "//kythe/proto:storage_cc_proto",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_protobuf//:protobuf",
     ],
 )

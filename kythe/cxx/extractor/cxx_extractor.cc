@@ -16,29 +16,30 @@
 
 #include "cxx_extractor.h"
 
-#include <tuple>
-#include <type_traits>
-#include <unordered_map>
-#include <utility>
-
 #include <fcntl.h>
 #include <openssl/sha.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <tuple>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+
+#include "absl/memory/memory.h"
+#include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Lex/MacroArgs.h"
 #include "clang/Lex/PPCallbacks.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Tooling/Tooling.h"
-
-#include "absl/memory/memory.h"
-#include "absl/strings/match.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+#include "kythe/cxx/common/file_utils.h"
 #include "kythe/cxx/common/json_proto.h"
 #include "kythe/cxx/common/kzip_writer.h"
 #include "kythe/cxx/common/path_utils.h"
@@ -49,6 +50,7 @@
 #include "kythe/proto/analysis.pb.h"
 #include "kythe/proto/buildinfo.pb.h"
 #include "kythe/proto/cxx.pb.h"
+#include "kythe/proto/filecontext.pb.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/VirtualFileSystem.h"
@@ -62,7 +64,6 @@ llvm::StringRef ToStringRef(absl::string_view sv) {
 }
 
 using cxx_extractor::LookupFileForIncludePragma;
-using cxx_extractor::RelativizePath;
 
 // We need "the lowercase ascii hex SHA-256 digest of the file contents."
 constexpr char kHexDigits[] = "0123456789abcdef";
@@ -101,19 +102,13 @@ class MutableFileContext {
  public:
   explicit MutableFileContext(
       kythe::proto::CompilationUnit::FileInput* file_input)
-      : file_input_(file_input),
-        any_(FindMutableContext(file_input, &context_)) {}
+      : any_(FindMutableContext(file_input, &context_)) {}
 
   kythe::proto::ContextDependentVersion* operator->() { return &context_; }
 
-  ~MutableFileContext() {
-    // TODO(shahms): Remove this when the field has been removed.
-    *file_input_->mutable_context() = context_;
-    any_->PackFrom(context_);
-  }
+  ~MutableFileContext() { any_->PackFrom(context_); }
 
  private:
-  kythe::proto::CompilationUnit::FileInput* file_input_;
   kythe::proto::ContextDependentVersion context_;
   google::protobuf::Any* any_;
 };
@@ -439,9 +434,10 @@ ExtractorPPCallbacks::ExtractorPPCallbacks(ExtractorState state)
     ClaimPragmaHandlerWrapper(ExtractorPPCallbacks* context)
         : PragmaHandler("kythe_claim"), context_(context) {}
     void HandlePragma(clang::Preprocessor& preprocessor,
-                      clang::PragmaIntroducerKind introducer,
+                      clang::PragmaIntroducer introducer,
                       clang::Token& first_token) override {
-      context_->HandleKytheClaimPragma(preprocessor, introducer, first_token);
+      context_->HandleKytheClaimPragma(preprocessor, introducer.Kind,
+                                       first_token);
     }
 
    private:
@@ -455,9 +451,9 @@ ExtractorPPCallbacks::ExtractorPPCallbacks(ExtractorState state)
     MetadataPragmaHandlerWrapper(ExtractorPPCallbacks* context)
         : PragmaHandler("kythe_metadata"), context_(context) {}
     void HandlePragma(clang::Preprocessor& preprocessor,
-                      clang::PragmaIntroducerKind introducer,
+                      clang::PragmaIntroducer introducer,
                       clang::Token& first_token) override {
-      context_->HandleKytheMetadataPragma(preprocessor, introducer,
+      context_->HandleKytheMetadataPragma(preprocessor, introducer.Kind,
                                           first_token);
     }
 
@@ -1127,11 +1123,15 @@ void CompilationWriter::WriteIndex(
   unit_vname->set_language(supported_language::ToString(lang));
   unit_vname->clear_path();
 
-  if (!target_name_.empty()) {
+  {
     kythe::proto::BuildDetails build_details;
     build_details.set_build_target(target_name_);
-    build_details.set_rule_type(rule_type_);  // may be empty; that's OK
-    PackAny(build_details, kBuildDetailsURI, unit.add_details());
+    build_details.set_rule_type(rule_type_);
+    build_details.set_build_config(build_config_);
+    // Include the details, but only if any of the fields are meaningfully set.
+    if (build_details.ByteSizeLong() > 0) {
+      PackAny(build_details, kBuildDetailsURI, unit.add_details());
+    }
   }
 
   for (const auto& file : source_files) {
@@ -1192,30 +1192,29 @@ void MapCompilerResources(clang::tooling::ToolInvocation* invocation,
   }
 }
 
-/// \brief Loads all data from a file or terminates the process.
-static std::string LoadFileOrDie(const std::string& file) {
-  FILE* handle = fopen(file.c_str(), "rb");
-  CHECK(handle != nullptr) << "Couldn't open input file " << file;
-  CHECK_EQ(fseek(handle, 0, SEEK_END), 0) << "Couldn't seek " << file;
-  long size = ftell(handle);
-  CHECK_GE(size, 0) << "Bad size for " << file;
-  CHECK_EQ(fseek(handle, 0, SEEK_SET), 0) << "Couldn't seek " << file;
-  std::string content;
-  content.resize(size);
-  CHECK_EQ(fread(&content[0], size, 1, handle), 1) << "Couldn't read " << file;
-  CHECK_NE(fclose(handle), EOF) << "Couldn't close " << file;
-  return content;
-}
-
 void ExtractorConfiguration::SetVNameConfig(const std::string& path) {
   if (!index_writer_.SetVNameConfiguration(LoadFileOrDie(path))) {
-    fprintf(stderr, "Couldn't configure vnames from %s\n", path.c_str());
+    absl::FPrintF(stderr, "Couldn't configure vnames from %s\n", path);
     exit(1);
   }
 }
 
+bool IsCuda(const std::vector<std::string>& args) {
+  for (int i = 0; i < args.size() - 1; i++) {
+    if (args[i] == "-x" && args[i + 1] == "cuda") {
+      return true;
+    }
+  }
+  return false;
+}
+
 void ExtractorConfiguration::SetArgs(const std::vector<std::string>& args) {
   final_args_ = args;
+  // Only compile CUDA for the host. Otherwise we end up getting more than a
+  // single clang invocation.
+  if (IsCuda(final_args_)) {
+    final_args_.push_back("--cuda-host-only");
+  }
   std::string executable = !final_args_.empty() ? final_args_[0] : "";
   if (final_args_.size() >= 3 && final_args_[1] == "--with_executable") {
     executable = final_args_[2];
@@ -1266,6 +1265,9 @@ void ExtractorConfiguration::InitializeFromEnvironment() {
   if (const char* env_exclude_autoconfiguration_files =
           getenv("KYTHE_EXCLUDE_AUTOCONFIGURATION_FILES")) {
     index_writer_.set_exclude_autoconfiguration_files(true);
+  }
+  if (const char* env_kythe_build_confg = getenv("KYTHE_BUILD_CONFIG")) {
+    SetBuildConfig(env_kythe_build_confg);
   }
 }
 
@@ -1320,6 +1322,7 @@ bool ExtractorConfiguration::Extract(
           new RecordingFS(llvm::vfs::getRealFileSystem(), &index_writer_)));
   index_writer_.set_target_name(target_name_);
   index_writer_.set_rule_type(rule_type_);
+  index_writer_.set_build_config(build_config_);
   index_writer_.set_output_path(compilation_output_path_);
   auto extractor = NewExtractor(
       &index_writer_,

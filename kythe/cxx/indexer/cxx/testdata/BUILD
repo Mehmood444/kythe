@@ -5,7 +5,6 @@ load(
     "cc_indexer_test",
     "objc_indexer_test",
 )
-load("//tools:build_rules/testing.bzl", "shell_tool_test")
 
 sh_test(
     name = "kindex",
@@ -23,6 +22,10 @@ sh_test(
         "kindex_test.main",
         "kindex_test.unit",
         "kindex_test.verify",
+        "windows_test.header",
+        "windows_test.main",
+        "windows_test.unit",
+        "windows_test.verify",
         "//kythe/cxx/indexer/cxx:indexer",
         "//kythe/cxx/tools:kindex_tool",
         "//kythe/cxx/verifier",
@@ -862,6 +865,15 @@ cc_indexer_test(
     ],
 )
 
+cc_indexer_test(
+    name = "build_config",
+    srcs = ["basic/build_config.cc"],
+    ibuild_config = "test-build-config",
+    tags = [
+        "basic",
+    ],
+)
+
 test_suite(
     name = "indexer_basic",
     tags = ["basic"],
@@ -972,6 +984,12 @@ cc_indexer_test(
 )
 
 cc_indexer_test(
+    name = "function_defines",
+    srcs = ["function/function_defines.cc"],
+    tags = ["function"],
+)
+
+cc_indexer_test(
     name = "function_direct_call",
     srcs = ["function/function_direct_call.cc"],
     tags = ["function"],
@@ -1062,6 +1080,12 @@ cc_indexer_test(
 cc_indexer_test(
     name = "function_member_conversion",
     srcs = ["function/function_member_conversion.cc"],
+    tags = ["function"],
+)
+
+cc_indexer_test(
+    name = "function_member_defines",
+    srcs = ["function/function_member_defines.cc"],
     tags = ["function"],
 )
 
@@ -2108,6 +2132,12 @@ cc_indexer_test(
 )
 
 cc_indexer_test(
+    name = "template_fn_defines",
+    srcs = ["template/template_fn_defines.cc"],
+    tags = ["template"],
+)
+
+cc_indexer_test(
     name = "template_fn_defn",
     srcs = ["template/template_fn_defn.cc"],
     tags = ["template"],
@@ -2554,6 +2584,17 @@ cc_indexer_test(
 )
 
 objc_indexer_test(
+    name = "objc_marked_source_category",
+    srcs = ["objc/categories/marked_category.m"],
+    check_for_singletons = True,
+    convert_marked_source = True,
+    tags = [
+        "marked_source",
+        "objc",
+    ],
+)
+
+objc_indexer_test(
     name = "objc_marked_source_class",
     srcs = ["objc/marked_class.m"],
     convert_marked_source = True,
@@ -2566,6 +2607,18 @@ objc_indexer_test(
 objc_indexer_test(
     name = "objc_marked_source_method",
     srcs = ["objc/marked_method.m"],
+    check_for_singletons = True,
+    convert_marked_source = True,
+    tags = [
+        "marked_source",
+        "objc",
+    ],
+)
+
+objc_indexer_test(
+    name = "objc_marked_source_property",
+    srcs = ["objc/marked_property.m"],
+    check_for_singletons = True,
     convert_marked_source = True,
     tags = [
         "marked_source",

@@ -1,5 +1,7 @@
 package(default_visibility = ["//kythe:default_visibility"])
 
+load("//:visibility.bzl", "PUBLIC_VISIBILITY")
+
 cc_library(
     name = "cmdlib",
     srcs = [
@@ -21,7 +23,9 @@ cc_library(
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_protobuf//:protobuf",
+        "@com_googlesource_code_re2//:re2",
     ],
 )
 
@@ -41,8 +45,10 @@ cc_library(
         "//kythe/cxx/extractor:index_pack",
         "//kythe/proto:analysis_cc_proto",
         "//kythe/proto:claim_cc_proto",
+        "//kythe/proto:filecontext_cc_proto",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_protobuf//:protobuf",
     ],
 )
@@ -64,12 +70,14 @@ cc_library(
         "//kythe/proto:claim_cc_proto",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_protobuf//:protobuf",
     ],
 )
 
 cc_binary(
     name = "kindex_tool",
+    visibility = [PUBLIC_VISIBILITY],
     deps = [
         ":cmdlib",
     ],
@@ -86,5 +94,19 @@ cc_binary(
     name = "static_claim",
     deps = [
         ":claimcmdlib",
+    ],
+)
+
+cc_binary(
+    name = "proto_metadata_plugin",
+    srcs = ["proto_metadata_plugin.cc"],
+    deps = [
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:node_hash_map",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_protobuf//:protobuf",
+        "@com_google_protobuf//:protoc_lib",
     ],
 )

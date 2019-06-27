@@ -17,8 +17,9 @@
 // This file uses the Clang style conventions.
 
 #include "IndexerPPCallbacks.h"
-#include "GraphObserver.h"
 
+#include "GraphObserver.h"
+#include "absl/strings/str_format.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Lex/PPCallbacks.h"
@@ -52,9 +53,10 @@ IndexerPPCallbacks::IndexerPPCallbacks(clang::Preprocessor& PP,
     MetadataPragmaHandlerWrapper(IndexerPPCallbacks* context)
         : PragmaHandler("kythe_metadata"), context_(context) {}
     void HandlePragma(clang::Preprocessor& Preprocessor,
-                      clang::PragmaIntroducerKind Introducer,
+                      clang::PragmaIntroducer Introducer,
                       clang::Token& FirstToken) override {
-      context_->HandleKytheMetadataPragma(Preprocessor, Introducer, FirstToken);
+      context_->HandleKytheMetadataPragma(Preprocessor, Introducer.Kind,
+                                          FirstToken);
     }
 
    private:
@@ -65,9 +67,9 @@ IndexerPPCallbacks::IndexerPPCallbacks(clang::Preprocessor& PP,
     InlineMetadataPragmaHandlerWrapper(IndexerPPCallbacks* context)
         : PragmaHandler("kythe_inline_metadata"), context_(context) {}
     void HandlePragma(clang::Preprocessor& Preprocessor,
-                      clang::PragmaIntroducerKind Introducer,
+                      clang::PragmaIntroducer Introducer,
                       clang::Token& FirstToken) override {
-      context_->HandleKytheInlineMetadataPragma(Preprocessor, Introducer,
+      context_->HandleKytheInlineMetadataPragma(Preprocessor, Introducer.Kind,
                                                 FirstToken);
     }
 
@@ -323,10 +325,10 @@ void IndexerPPCallbacks::HandleKytheMetadataPragma(
   llvm::SmallString<1024> search_path;
   llvm::SmallString<1024> relative_path;
   llvm::SmallString<1024> filename;
-  const auto* file = cxx_extractor::LookupFileForIncludePragma(&preprocessor, &search_path,
-                                                &relative_path, &filename);
+  const auto* file = cxx_extractor::LookupFileForIncludePragma(
+      &preprocessor, &search_path, &relative_path, &filename);
   if (!file) {
-    fprintf(stderr, "Missing metadata file: %s\n", filename.c_str());
+    absl::FPrintF(stderr, "Missing metadata file: %s\n", filename.str());
     return;
   }
   clang::FileID pragma_file_id =
@@ -334,7 +336,7 @@ void IndexerPPCallbacks::HandleKytheMetadataPragma(
   if (!pragma_file_id.isInvalid()) {
     Observer.applyMetadataFile(pragma_file_id, file, "");
   } else {
-    fprintf(stderr, "Metadata pragma was in an impossible place\n");
+    absl::FPrintF(stderr, "Metadata pragma was in an impossible place\n");
   }
 }
 
@@ -345,7 +347,7 @@ void IndexerPPCallbacks::HandleKytheInlineMetadataPragma(
   clang::Token tok;
   if (!preprocessor.LexStringLiteral(tok, search_string,
                                      "pragma kythe_inline_metadata",
-                                     /*MacroExpansion=*/true)) {
+                                     /*AllowMacroExpansion=*/true)) {
     return;
   }
   if (search_string.empty()) {

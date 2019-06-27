@@ -47,18 +47,18 @@ that use Kythe's Java and C++ extractors.  This effectively allows Bazel to
 extract each compilation as it is run during the build.
 
 Add the flag
-`--experimental_action_listener=//kythe/java/com/google/devtools/kythe/extractors/java/bazel:extract_kzip`
+`--experimental_action_listener=@io_kythe//kythe/extractors:extract_kzip_java`
 to make Bazel extract Java compilations and
-`--experimental_action_listener=//kythe/cxx/extractor:extract_kzip` to do the
+`--experimental_action_listener=@io_kythe//kythe/extractors:extract_kzip_cxx` to do the
 same for C++.
 
 {% highlight bash %}
 # Extract all Java/C++ compilations in Kythe
-bazel test \
-  --experimental_action_listener=//kythe/java/com/google/devtools/kythe/extractors/java/bazel:extract_kzip \
-  --experimental_action_listener=//kythe/cxx/extractor:extract_kzip \
+bazel build -k \
+  --experimental_action_listener=@io_kythe//kythe/extractors:extract_kzip_java \
+  --experimental_action_listener=@io_kythe//kythe/extractors:extract_kzip_cxx \
   --experimental_extra_action_top_level_only \
-  //...
+  //kythe/cxx/... //kythe/java/...
 
 # Find the extracted .kzip files
 find -L bazel-out -name '*.kzip'

@@ -21,6 +21,7 @@ MANIFEST-*
 # Build artifacts
 /bazel-*
 /doxygen-out
+/node_modules
 
 # Symlinks
 third_party/libmemcached
@@ -31,3 +32,6 @@ tools/node
 # Kythe website artifacts
 kythe/web/site/.bundle/
 kythe/web/site/_vendor/
+
+# User bazelrc overrides
+/user.bazelrc

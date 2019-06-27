@@ -1,8 +1,8 @@
 load(
     "//tools/build_rules/verifier_test:cc_indexer_test.bzl",
+    "cc_bazel_extractor_test",
     "cc_extractor_test",
     "objc_bazel_extractor_test",
-    "cc_bazel_extractor_test",
 )
 load("//tools:build_rules/testing.bzl", "shell_tool_test")
 
@@ -201,6 +201,21 @@ shell_tool_test(
         "test_common.sh",
     ],
     scriptfile = "test_modules.sh",
+    tools = {
+        "EXTRACTOR": "//kythe/cxx/extractor:cxx_extractor",
+        "KINDEX_TOOL": "//kythe/cxx/tools:kindex_tool",
+    },
+)
+
+shell_tool_test(
+    name = "build_config",
+    data = [
+        "build_config.UNIT",
+        "build_config.cc",
+        "skip_functions.sh",
+        "test_common.sh",
+    ],
+    scriptfile = "test_build_config.sh",
     tools = {
         "EXTRACTOR": "//kythe/cxx/extractor:cxx_extractor",
         "KINDEX_TOOL": "//kythe/cxx/tools:kindex_tool",

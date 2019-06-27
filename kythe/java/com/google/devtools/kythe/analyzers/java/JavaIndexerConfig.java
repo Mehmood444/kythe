@@ -27,20 +27,20 @@ public class JavaIndexerConfig extends IndexerConfig {
   @Parameter(
       names = "--ignore_vname_paths",
       description =
-          "Determines whether the analyzer should ignore the path components of the"
-              + " {@link VName}s in each compilation.  This can be used to \"fix\" the coherence"
-              + " of {@link VName}s across compilations when the extractor was not (or could not be)"
-              + " supplied with a proper {@link VName}s configuration file.  Each path will instead be"
-              + " set to the qualified name of each node's enclosing class (e.g. \"java.lang.String\""
-              + " or \"com.google.common.base.Predicate\").")
+          "Determines whether the analyzer should ignore the path components of the {@link VName}s"
+              + " in each compilation.  This can be used to \"fix\" the coherence of {@link"
+              + " VName}s across compilations when the extractor was not (or could not be)"
+              + " supplied with a proper {@link VName}s configuration file.  Each path will"
+              + " instead be set to the qualified name of each node's enclosing class (e.g."
+              + " \"java.lang.String\" or \"com.google.common.base.Predicate\").")
   private boolean ignoreVNamePaths;
 
   @Parameter(
       names = "--ignore_vname_roots",
       description =
-          "Determines whether the analyzer should ignore the root components of the"
-              + " {@link VName}s in each compilation.  This can be used to \"fix\" the coherence"
-              + " of {@link VName}s across compilations when the extractor was not (or could not be)"
+          "Determines whether the analyzer should ignore the root components of the {@link VName}s"
+              + " in each compilation.  This can be used to \"fix\" the coherence of {@link"
+              + " VName}s across compilations when the extractor was not (or could not be)"
               + " supplied with a proper {@link VName}s configuration file.")
   private boolean ignoreVNameRoots;
 
@@ -54,9 +54,17 @@ public class JavaIndexerConfig extends IndexerConfig {
   @Parameter(
       names = "--emit_jvm",
       description =
-          "Whether to emit name nodes or full JVM language semantic nodes for each Java class"
-              + "(must be either \"names\" or \"semantic\"; \"names\" is the default and deprecated)")
-  private JvmMode jvmMode = JvmMode.NAMES;
+          "Whether to emit name nodes or full JVM language semantic nodes for each Java class(must"
+              + " be either \"names\" or \"semantic\"; \"semantic\" is the default and \"names\""
+              + " is deprecated)")
+  private JvmMode jvmMode = JvmMode.SEMANTIC;
+
+  @Parameter(
+      names = "--emit_jvm_references",
+      description =
+          "Whether to reference the JVM graph when encountering nodes from outside the analyzed"
+              + " compilation unit")
+  private boolean jvmReferences = false;
 
   @Parameter(
       names = "--emit_anchor_scopes",
@@ -93,6 +101,10 @@ public class JavaIndexerConfig extends IndexerConfig {
     return jvmMode;
   }
 
+  public boolean getEmitJvmReferences() {
+    return jvmReferences;
+  }
+
   public boolean getEmitAnchorScopes() {
     return emitAnchorScopes;
   }
@@ -114,6 +126,11 @@ public class JavaIndexerConfig extends IndexerConfig {
 
   public JavaIndexerConfig setJvmMode(JvmMode jvmMode) {
     this.jvmMode = jvmMode;
+    return this;
+  }
+
+  public JavaIndexerConfig setEmitJvmReferences(boolean jvmReferences) {
+    this.jvmReferences = jvmReferences;
     return this;
   }
 

@@ -1,8 +1,8 @@
 package(default_visibility = ["//kythe:proto_visibility"])
 
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
-load(":go.bzl", "go_kythe_proto")
 load("//:visibility.bzl", "PUBLIC_PROTO_VISIBILITY")
+load(":go.bzl", "go_kythe_proto")
 
 filegroup(
     name = "public",
@@ -36,6 +36,12 @@ proto_library(
 go_kythe_proto(
     proto = ":schema_proto",
     deps = [":storage_go_proto"],
+)
+
+java_proto_library(
+    name = "schema_java_proto",
+    visibility = [PUBLIC_PROTO_VISIBILITY],
+    deps = [":schema_proto"],
 )
 
 # Common Kythe protocol buffer definitions shared among other libraries
@@ -226,6 +232,7 @@ proto_library(
 
 cc_proto_library(
     name = "buildinfo_cc_proto",
+    visibility = [PUBLIC_PROTO_VISIBILITY],
     deps = [":buildinfo_proto"],
 )
 

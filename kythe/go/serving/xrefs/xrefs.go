@@ -262,6 +262,7 @@ func (t *Table) Decorations(ctx context.Context, req *xpb.DecorationsRequest) (*
 
 	if req.References {
 		patterns := xrefs.ConvertFilters(req.Filter)
+		buildConfigs := stringset.New(req.BuildConfig...)
 
 		reply.Reference = make([]*xpb.DecorationsReply_Reference, 0, len(decor.Decoration))
 		reply.Nodes = make(map[string]*cpb.NodeInfo, len(decor.Target))
@@ -278,20 +279,23 @@ func (t *Table) Decorations(ctx context.Context, req *xpb.DecorationsRequest) (*
 		tracePrintf(ctx, "Potential target nodes: %d", len(nodes))
 
 		// All known definition locations (Anchor.Ticket -> Anchor)
-		var defs map[string]*xpb.Anchor
+		defs := make(map[string]*xpb.Anchor, len(decor.TargetDefinitions))
+		for _, def := range decor.TargetDefinitions {
+			defs[def.Ticket] = a2a(def, false).Anchor
+		}
 		if req.TargetDefinitions {
 			reply.DefinitionLocations = make(map[string]*xpb.Anchor, len(decor.TargetDefinitions))
-
-			defs = make(map[string]*xpb.Anchor, len(decor.TargetDefinitions))
-			for _, def := range decor.TargetDefinitions {
-				defs[def.Ticket] = a2a(def, false).Anchor
-			}
 		}
 		tracePrintf(ctx, "Potential target defs: %d", len(defs))
 
 		bindings := stringset.New()
 
 		for _, d := range decor.Decoration {
+			// Filter decorations by requested build configs.
+			if len(buildConfigs) != 0 && !buildConfigs.Contains(d.Anchor.BuildConfiguration) {
+				continue
+			}
+
 			start, end, exists := patcher.Patch(d.Anchor.StartOffset, d.Anchor.EndOffset)
 			// Filter non-existent anchor.  Anchors can no longer exist if we were
 			// given a dirty buffer and the anchor was inside a changed region.
@@ -309,6 +313,10 @@ func (t *Table) Decorations(ctx context.Context, req *xpb.DecorationsRequest) (*
 				}
 			} else {
 				r.TargetDefinition = ""
+			}
+
+			if !req.SemanticScopes {
+				r.SemanticScope = ""
 			}
 
 			if req.ExtendsOverrides && (r.Kind == edges.Defines || r.Kind == edges.DefinesBinding) {
@@ -329,6 +337,12 @@ func (t *Table) Decorations(ctx context.Context, req *xpb.DecorationsRequest) (*
 
 			for _, o := range decor.TargetOverride {
 				if bindings.Contains(o.Overriding) {
+					def := defs[o.OverriddenDefinition]
+					if def != nil && len(buildConfigs) != 0 && !buildConfigs.Contains(def.BuildConfig) {
+						// Skip override with undesirable build configuration.
+						continue
+					}
+
 					os, ok := reply.ExtendsOverrides[o.Overriding]
 					if !ok {
 						os = &xpb.DecorationsReply_Overrides{}
@@ -345,11 +359,9 @@ func (t *Table) Decorations(ctx context.Context, req *xpb.DecorationsRequest) (*
 					if n := nodes[o.Overridden]; n != nil {
 						reply.Nodes[o.Overridden] = n
 					}
-					if req.TargetDefinitions {
-						if def, ok := defs[o.OverriddenDefinition]; ok {
-							ov.TargetDefinition = o.OverriddenDefinition
-							reply.DefinitionLocations[o.OverriddenDefinition] = def
-						}
+					if req.TargetDefinitions && def != nil {
+						ov.TargetDefinition = o.OverriddenDefinition
+						reply.DefinitionLocations[o.OverriddenDefinition] = def
 					}
 				}
 			}
@@ -394,6 +406,8 @@ func decorationToReference(norm *span.Normalizer, d *srvpb.FileDecorations_Decor
 		Kind:             d.Kind,
 		Span:             span,
 		TargetDefinition: d.TargetDefinition,
+		BuildConfig:      d.Anchor.BuildConfiguration,
+		SemanticScope:    d.SemanticScope,
 	}
 }
 
@@ -435,7 +449,6 @@ func (t *Table) CrossReferences(ctx context.Context, req *xpb.CrossReferencesReq
 		}
 	}
 	initialSkip := int(pageToken.Indices["skip"])
-	edgesPageToken := pageToken.SubTokens["edges"]
 	stats.skip = initialSkip
 
 	reply := &xpb.CrossReferencesReply{
@@ -451,6 +464,7 @@ func (t *Table) CrossReferences(ctx context.Context, req *xpb.CrossReferencesReq
 		reply.DefinitionLocations = make(map[string]*xpb.Anchor)
 	}
 
+	buildConfigs := stringset.New(req.BuildConfig...)
 	patterns := xrefs.ConvertFilters(req.Filter)
 
 	nextPageToken := &ipb.PageToken{
@@ -465,12 +479,11 @@ func (t *Table) CrossReferences(ctx context.Context, req *xpb.CrossReferencesReq
 
 	relatedKinds := stringset.New(req.RelatedNodeKind...)
 
-	wantMoreCrossRefs := edgesPageToken == "" &&
-		(req.DefinitionKind != xpb.CrossReferencesRequest_NO_DEFINITIONS ||
-			req.DeclarationKind != xpb.CrossReferencesRequest_NO_DECLARATIONS ||
-			req.ReferenceKind != xpb.CrossReferencesRequest_NO_REFERENCES ||
-			req.CallerKind != xpb.CrossReferencesRequest_NO_CALLERS ||
-			len(req.Filter) > 0)
+	wantMoreCrossRefs := (req.DefinitionKind != xpb.CrossReferencesRequest_NO_DEFINITIONS ||
+		req.DeclarationKind != xpb.CrossReferencesRequest_NO_DECLARATIONS ||
+		req.ReferenceKind != xpb.CrossReferencesRequest_NO_REFERENCES ||
+		req.CallerKind != xpb.CrossReferencesRequest_NO_CALLERS ||
+		len(req.Filter) > 0)
 
 	var foundCrossRefs bool
 	for i := 0; i < len(tickets); i++ {
@@ -523,6 +536,11 @@ func (t *Table) CrossReferences(ctx context.Context, req *xpb.CrossReferencesReq
 		}
 
 		for _, grp := range cr.Group {
+			// Filter anchor groups based on requested build configs
+			if len(buildConfigs) != 0 && !buildConfigs.Contains(grp.BuildConfig) && !xrefs.IsRelatedNodeKind(relatedKinds, grp.Kind) {
+				continue
+			}
+
 			switch {
 			case xrefs.IsDefKind(req.DefinitionKind, grp.Kind, cr.Incomplete):
 				reply.Total.Definitions += int64(len(grp.Anchor))
@@ -553,6 +571,11 @@ func (t *Table) CrossReferences(ctx context.Context, req *xpb.CrossReferencesReq
 		}
 
 		for _, idx := range cr.PageIndex {
+			// Filter anchor pages based on requested build configs
+			if len(buildConfigs) != 0 && !buildConfigs.Contains(idx.BuildConfig) && !xrefs.IsRelatedNodeKind(relatedKinds, idx.Kind) {
+				continue
+			}
+
 			switch {
 			case xrefs.IsDefKind(req.DefinitionKind, idx.Kind, cr.Incomplete):
 				reply.Total.Definitions += int64(idx.Count)
@@ -616,7 +639,7 @@ func (t *Table) CrossReferences(ctx context.Context, req *xpb.CrossReferencesReq
 		nextPageToken.Indices["skip"] = int32(initialSkip + stats.total)
 	}
 
-	if _, skip := nextPageToken.Indices["skip"]; skip || nextPageToken.SubTokens["edges"] != "" {
+	if _, skip := nextPageToken.Indices["skip"]; skip {
 		rec, err := proto.Marshal(nextPageToken)
 		if err != nil {
 			return nil, fmt.Errorf("internal error: error marshalling page token: %v", err)
@@ -790,6 +813,7 @@ func a2a(a *srvpb.ExpandedAnchor, anchorText bool) *xpb.CrossReferencesReply_Rel
 		Span:        a.Span,
 		Snippet:     a.Snippet,
 		SnippetSpan: a.SnippetSpan,
+		BuildConfig: a.BuildConfiguration,
 	}}
 }
 

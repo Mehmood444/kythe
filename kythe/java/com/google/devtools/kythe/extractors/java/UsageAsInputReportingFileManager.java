@@ -18,9 +18,9 @@ package com.google.devtools.kythe.extractors.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.devtools.kythe.platform.java.filemanager.ForwardingStandardJavaFileManager;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardJavaFileManager;
@@ -39,8 +38,7 @@ import javax.tools.StandardJavaFileManager;
  * compilation.
  */
 @com.sun.tools.javac.api.ClientCodeWrapper.Trusted
-class UsageAsInputReportingFileManager extends ForwardingJavaFileManager<StandardJavaFileManager>
-    implements StandardJavaFileManager {
+class UsageAsInputReportingFileManager extends ForwardingStandardJavaFileManager {
 
   private final Map<URI, InputUsageRecord> inputUsageRecords = new HashMap<>();
 
@@ -137,37 +135,37 @@ class UsageAsInputReportingFileManager extends ForwardingJavaFileManager<Standar
   }
 
   @Override
-  public void setLocation(Location location, Iterable<? extends File> path) throws IOException {
-    fileManager.setLocation(location, path);
+  public Location getLocationForModule(Location location, JavaFileObject fo) throws IOException {
+    return super.getLocationForModule(location, unwrap(fo));
   }
 
   @Override
-  public Iterable<? extends File> getLocation(Location location) {
-    return fileManager.getLocation(location);
+  public boolean contains(Location location, FileObject fo) throws IOException {
+    return super.contains(location, unwrap(fo));
   }
 
-  // TODO(schroederc): @Override; method added in JDK9
-  public void setLocationFromPaths(Location location, Collection<? extends Path> paths)
-      throws IOException {
-    try {
-      StandardJavaFileManager.class
-          .getMethod("setLocationFromPaths", Location.class, Collection.class)
-          .invoke(fileManager, location, paths);
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new IllegalStateException("setLocationFromPaths called by unsupported Java version", e);
-    }
+  @Override
+  @SuppressWarnings({"IterablePathParameter"}) // safe by specification.
+  public Iterable<? extends JavaFileObject> getJavaFileObjectsFromPaths(
+      Iterable<? extends Path> paths) {
+    return Iterables.transform(super.getJavaFileObjectsFromPaths(paths), input -> map(input, null));
+  }
+
+  @Override
+  public Path asPath(FileObject fo) {
+    return super.asPath(unwrap(fo));
   }
 
   // StandardJavaFileManager doesn't like it when it's asked about a JavaFileObject
   // it didn't create, so we need to unwrap our objects.
-  private FileObject unwrap(FileObject jfo) {
+  private static FileObject unwrap(FileObject jfo) {
     if (jfo instanceof UsageAsInputReportingJavaFileObject) {
       return ((UsageAsInputReportingJavaFileObject) jfo).underlyingFileObject;
     }
     return jfo;
   }
 
-  private JavaFileObject unwrap(JavaFileObject jfo) {
+  private static JavaFileObject unwrap(JavaFileObject jfo) {
     if (jfo instanceof UsageAsInputReportingJavaFileObject) {
       return ((UsageAsInputReportingJavaFileObject) jfo).underlyingFileObject;
     }

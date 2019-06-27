@@ -1,5 +1,5 @@
-load("//tools:build_rules/shims.bzl", "go_library", "go_test")
 load("//kythe/proto:go.bzl", "go_kythe_proto")
+load("//tools:build_rules/shims.bzl", "go_library", "go_test")
 
 package(default_visibility = ["//kythe:default_visibility"])
 
@@ -28,6 +28,7 @@ go_test(
     name = "riegeli_test",
     srcs = ["riegeli_test.go"],
     library = ":riegeli",
+    shard_count = 10,
     deps = [
         ":riegeli_test_go_proto",
         "//kythe/go/util/compare",
