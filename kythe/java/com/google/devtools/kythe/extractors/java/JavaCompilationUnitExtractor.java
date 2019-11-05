@@ -21,7 +21,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -81,8 +80,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -109,7 +110,7 @@ public class JavaCompilationUnitExtractor {
 
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static final String JDK_MODULE_PREFIX = "/modules/java.";
+  private static final Pattern JDK_MODULE_PATTERN = Pattern.compile("^/modules/(java|jdk)[.].*");
   private static final String MODULE_INFO_NAME = "module-info";
   private static final String SOURCE_JAR_ROOT = "!SOURCE_JAR!";
 
@@ -207,6 +208,7 @@ public class JavaCompilationUnitExtractor {
       unit.addSourceFile(sourceFile);
     }
     unit.setOutputKey(outputPath);
+    unit.setWorkingDirectory(rootDirectory);
     unit.addDetails(
         Any.newBuilder()
             .setTypeUrl(JAVA_DETAILS_URL)
@@ -434,7 +436,12 @@ public class JavaCompilationUnitExtractor {
       throws ExtractionException {
     for (InputUsageRecord input : fileManager.getUsages()) {
       processRequiredInput(
-          input.fileObject(), input.location(), fileManager, sourceFiles, genSrcDir, results);
+          input.fileObject(),
+          input.location().orElse(null),
+          fileManager,
+          sourceFiles,
+          genSrcDir,
+          results);
     }
   }
 
@@ -495,7 +502,7 @@ public class JavaCompilationUnitExtractor {
 
     // If the file was part of the JDK we do not store it as the JDK is tied
     // to the analyzer we'll run on this information later on.
-    if ((isJarPath && jarPath.startsWith(jdkJar)) || path.startsWith(JDK_MODULE_PREFIX)) {
+    if ((isJarPath && jarPath.startsWith(jdkJar)) || JDK_MODULE_PATTERN.matcher(path).matches()) {
       return;
     }
 
@@ -809,7 +816,7 @@ public class JavaCompilationUnitExtractor {
 
       // Ensure generated source directory is relative to root.
       genSrcDir =
-          genSrcDir.transform(
+          genSrcDir.map(
               p -> Paths.get(ExtractorUtils.tryMakeRelative(rootDirectory, p.toString())));
 
       for (String source : sources) {

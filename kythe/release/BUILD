@@ -23,7 +23,7 @@ docker_build(
     deps = ["//kythe/release/base"],
 )
 
-release_version = "v0.0.30"
+release_version = "v0.0.33"
 
 genrule(
     name = "release",
@@ -53,6 +53,7 @@ genrule(
         ":misc",
         "//kythe/proto:public",
         "//third_party:licenses",
+        "//kythe/extractors/bazel:extractors_bazelrc",
     ],
     outs = [
         "kythe-" + release_version + ".tar.gz",
@@ -86,6 +87,7 @@ genrule(
         "--cp $(location proto_extractor) extractors/proto_extractor",
         "--cp $(location textproto_extractor) extractors/textproto_extractor",
         "--cp $(location cc_proto_metadata_plugin) tools/cc_proto_metadata_plugin",
+        "--cp $(location //kythe/extractors/bazel:extractors_bazelrc) ./",
         "--path tools/ $(locations tools)",
         "--path proto/ $(locations //kythe/proto:public)",
         "--relpaths 'third_party' --path 'third_party' $(locations //third_party:licenses)",
@@ -127,6 +129,7 @@ sh_test(
         "//kythe/java/com/google/devtools/kythe/util:test_srcs",
         "//kythe/testdata:entries",
         "//kythe/testdata:test.kindex",
+        "//kythe/testdata:test.kzip",
         "//third_party/guava",
         "//third_party/javac:javac_jar",
         "@com_github_stedolan_jq//:jq",
@@ -236,10 +239,11 @@ filegroup(
     name = "tools",
     srcs = [
         "//kythe/cxx/verifier",
+        "//kythe/go/extractors/config/runextractor",
         "//kythe/go/platform/tools/dedup_stream",
         "//kythe/go/platform/tools/entrystream",
-        "//kythe/go/platform/tools/indexpack",
         "//kythe/go/platform/tools/kzip",
+        "//kythe/go/platform/tools/kzip_validator",
         "//kythe/go/platform/tools/viewindex",
         "//kythe/go/serving/tools:http_server",
         "//kythe/go/serving/tools:kythe",
